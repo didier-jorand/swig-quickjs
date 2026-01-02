@@ -95,6 +95,8 @@ SWIG_From_dec(unsigned long)(unsigned long value)
 }
 }
 
+// TODO: QuickJS has no 32bit return function for bigint, we'd need to implement it
+// but it's not important for my use-case so I don't care about that path
 %fragment(SWIG_AsVal_frag(unsigned long),"header",
           fragment="SWIG_CanCastAsInteger") {
 SWIGINTERN int
@@ -102,16 +104,19 @@ SWIG_AsVal_dec(unsigned long)(JSValueConst obj, unsigned long *val)
 {
 %#if defined(LLONG_MAX) && (LONG_WIDTH == LLONG_WIDTH)
   int64_t v;
+  if (!(JS_IsNumber(obj) || JS_IsBigInt(ctx,obj))) {
+    return SWIG_TypeError;
+  }
 %#else
   uint32_t v;
-%#endif  
   if(!JS_IsNumber(obj)) {
     return SWIG_TypeError;
   }
+%#endif  
 
   if(val) {
 %#if defined(LLONG_MAX) && (LONG_WIDTH == LLONG_WIDTH)
-    if(JS_ToInt64(ctx, &v, obj))
+    if(JS_ToInt64Ext(ctx, &v, obj))
       return SWIG_ERROR;
     if(v<0) 
       return SWIG_OverflowError;

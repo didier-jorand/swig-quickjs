@@ -3270,7 +3270,8 @@ int QuickJSEmitter::dump(Node *n) {
   String *module = Getattr(n, "name");
   
   Template initializer_define(getTemplate("js_initializer_define"));
-  initializer_define.replace("$jsname", module).pretty_print(f_header);
+  initializer_define.replace("$jsname", module)
+      .pretty_print(f_header);
 
   SwigType_emit_type_table(f_runtime, f_wrappers);
 
@@ -3281,8 +3282,12 @@ int QuickJSEmitter::dump(Node *n) {
   emitNamespaces();
 
   // compose the initializer function using a template
+  Template t_createNamespace(getTemplate("quickjs_nspace_definition"));
+  t_createNamespace.replace("$jsmangledname", Getattr(current_namespace, NAME_MANGLED));
+
   Template initializer(getTemplate("js_initializer"));
   initializer.replace("$jsname", module)
+      .replace("$jsglobalnamespace", t_createNamespace.str())
       .replace("$jsregisterclasses", state.globals(INITIALIZER))
       .replace("$jscreatenamespaces", state.globals(CREATE_NAMESPACES))
       .replace("$jsregisternamespaces", state.globals(REGISTER_NAMESPACES))
@@ -3590,9 +3595,12 @@ int QuickJSEmitter::emitNamespaces() {
 	.replace("$jsmangledname", name_mangled)
 	.pretty_print(f_wrap_cpp);
 
-    Template t_createNamespace(getTemplate("quickjs_nspace_definition"));
-    t_createNamespace.replace("$jsmangledname", name_mangled);
-    Append(state.globals(CREATE_NAMESPACES), t_createNamespace.str());
+    // Don't create the global namespace with the rest, it needs to be done earlier
+    if (!Equal(moduleName, name)) {
+      Template t_createNamespace(getTemplate("quickjs_nspace_definition"));
+      t_createNamespace.replace("$jsmangledname", name_mangled);
+      Append(state.globals(CREATE_NAMESPACES), t_createNamespace.str());
+    }
 
     // Don't register the global namespace as namespace. It is included in the
     // module object.

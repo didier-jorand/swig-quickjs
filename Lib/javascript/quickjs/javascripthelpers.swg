@@ -644,7 +644,8 @@ SWIGINTERN int SWIG_QuickJS_getBasePrototype1(JSContext *ctx, JSValue proto, JSV
 
   while (!JS_StrictEq(ctx, base, SWIG_QuickJS_swig_object_class_definition.prototype)) {
     /* get the own properties of the base */
-    JS_GetOwnPropertyNames(ctx, &prop_names, &prop_num, base, JS_GPN_STRING_MASK|JS_GPN_ENUM_ONLY);
+    r = JS_GetOwnPropertyNames(ctx, &prop_names, &prop_num, base, JS_GPN_STRING_MASK|JS_GPN_ENUM_ONLY);
+    if(r<0) { return -1; }
 
     for(j=0; j<(int)prop_num; j++) {
       /*--s = JS_AtomToCString(ctx, prop_names[j].atom);--*/
@@ -656,10 +657,11 @@ SWIGINTERN int SWIG_QuickJS_getBasePrototype1(JSContext *ctx, JSValue proto, JSV
         /*--printf("+");--*/
         r = JS_GetOwnProperty(ctx, &prop, base, prop_names[j].atom);
         if(r<0) { return -1; }
+        if(r==0) { JS_ThrowInternalError(ctx, "prop missing"); return -1; }
         if(prop.flags & JS_PROP_GETSET) {
-          r = JS_DefinePropertyGetSet(ctx, proto, prop_names[j].atom, prop.getter, prop.setter, JS_PROP_CONFIGURABLE|JS_PROP_ENUMERABLE);
+          r = JS_DefinePropertyGetSet(ctx, proto, prop_names[j].atom, prop.getter, prop.setter, JS_PROP_CONFIGURABLE|JS_PROP_ENUMERABLE|JS_PROP_THROW);
         } else {
-          r = JS_DefinePropertyValue(ctx, proto, prop_names[j].atom, prop.value, JS_PROP_CONFIGURABLE|JS_PROP_ENUMERABLE);
+          r = JS_DefinePropertyValue(ctx, proto, prop_names[j].atom, prop.value, JS_PROP_CONFIGURABLE|JS_PROP_ENUMERABLE|JS_PROP_THROW);
         }
         if(r<0) { return -1; }
       }
@@ -743,7 +745,8 @@ SWIGINTERN JSValueConst SWIG_QuickJS_getBasePrototype(JSContext *ctx, const char
   proto = JS_NewObjectClass(ctx, SWIG_QuickJS_swig_prototype_class_class_definition.class_id);
   if(JS_IsException(proto)) { return JS_EXCEPTION; }
   /* the combined prototype inherits from SwigObject */
-  JS_SetPrototype(ctx, proto, SWIG_QuickJS_swig_object_class_definition.prototype);
+  r = JS_SetPrototype(ctx, proto, SWIG_QuickJS_swig_object_class_definition.prototype);
+  if (r<0) { return JS_EXCEPTION; }
   
   for(i=0; i<bases_num; i++) {
     base = SWIG_QuickJS_classRegistryLookup(ctx, bases[i]);
@@ -809,16 +812,23 @@ SWIGINTERN int SWIG_QuickJS_registerClass(JSContext *ctx,
 
   /* Set the parent class prototype as prototype of the prototype... 
    * Note that getBasePrototype will create a specific prototype in case of multiple inheritance. */
-  clsDef->base_prototype = SWIG_QuickJS_getBasePrototype(ctx, clsDef->class_name, clsDef->bases, clsDef->bases_num);
-  if(JS_IsException(clsDef->base_prototype)) { return -1; }
-  JS_SetPrototype(ctx, clsDef->prototype, clsDef->base_prototype);
-  JS_FreeValue(ctx, clsDef->base_prototype);
+  // getBasePrototype for object_class returns a dup of its prototype, which causes a circular ref
+  // TODO: maybe object_class should be registered manually like class_class? or is there a base prototype that makes sense?
+  // not that it matters as this type effectively has no constructor (it's implement to just error)
+  if (clsDef != &SWIG_QuickJS_swig_object_class_definition) { 
+    clsDef->base_prototype = SWIG_QuickJS_getBasePrototype(ctx, clsDef->class_name, clsDef->bases, clsDef->bases_num);
+    if(JS_IsException(clsDef->base_prototype)) { return -1; }
+    r = JS_SetPrototype(ctx, clsDef->prototype, clsDef->base_prototype);
+    if (r<0) { return r; }
+    JS_FreeValue(ctx, clsDef->base_prototype);
+  }
   
   ctor = JS_NewCFunction2(ctx, clsDef->ctor, clsName, -1, JS_CFUNC_constructor, 0);
   if(JS_IsException(ctor)) { return -1; }
   /* the constructor must include the "static" fields of the class (enums, const static members, methods):
    * set its prototype as the class prototype. */
-  JS_SetPrototype(ctx, ctor, clsDef->prototype);
+  r = JS_SetPrototype(ctx, ctor, clsDef->prototype);
+  if (r<0) { return r; }
   JS_SetConstructor(ctx, ctor, clsDef->prototype);  
   JS_SetClassProto(ctx, clsDef->class_id, clsDef->prototype);
   
