@@ -97,6 +97,9 @@ static JSValue $jswrapper(JSContext *ctx, JSValueConst this_val, int argc, JSVal
   if(argc >= $jsargrequired && argc <= $jsargcount) {
     this_val = $jswrapper(ctx, this_val, argc, argv);
     if(!JS_IsException(this_val)) { return this_val; }
+    // TODO: if it is an exception we need to handle it more carefully - in particular,
+    // we need to remove it from the current interpreter exception, otherwise future
+    // checks of the intepreter state will spuriously indicate there's an exception ongoing
   }
 %}
 
@@ -452,7 +455,7 @@ static const SWIG_QuickJS_ConstantListEntry $jsnspace_constants[] = {
   $jsglobalconstants
 };
 
-static JSValue $jsmangledname_namespace;
+static JSValue $jsmangledname_namespace = JS_UNDEFINED;
 %}
 
 /* -----------------------------------------------------------------------------

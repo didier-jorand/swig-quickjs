@@ -100,6 +100,16 @@ JSModuleDef *SWIG_INIT(JSContext *ctx, const char *module_name)
     return m;
 }
 
+%} /* end of %insert(init) */
+
+/* -----------------------------------------------------------------------------
+ * js_initializer:  template for the module initializer function
+ *   - $jsname:                   module name
+ *   - $jscreatenamespaces:       part with code for creating namespace objects
+ *   - $jscreateclasses:          part with code for creating classes
+ *   - $jsregisternamespaces:     part with code for registration of namespaces
+ * ----------------------------------------------------------------------------- */
+%fragment ("js_initializer", "templates") %{
 
 SWIGINTERN int SWIG_module_initialize(JSContext *ctx, JSModuleDef *m)
 {
@@ -122,6 +132,8 @@ SWIGINTERN int SWIG_module_initialize(JSContext *ctx, JSModuleDef *m)
   swigObjectRegistry = SWIG_QuickJS_getSwigObjectRegistry(ctx);
   if(JS_IsException(swigObjectRegistry)) {return SWIG_ERROR;}
 
+  // Have to register the global namespace first so it can be used for the following globals
+  $jsglobalnamespace
 
   /* Register the swig prototype class, which is the class of the prototype of wrapper objects
    * but, as it cannot have itself as prototype, register it manually (not with SWIG_QuickJS_register_class())
@@ -264,17 +276,6 @@ SWIGINTERN int SWIG_module_initialize(JSContext *ctx, JSModuleDef *m)
   JS_SetPropertyStr(ctx, globalObject, "SWIG_type",
       JS_NewCFunction(ctx, _wrap_SWIG_QuickJS_typename, "SWIG_type", 1));
   JS_FreeValue(ctx, globalObject);
-
-%} /* end of %insert(init) */
-
-/* -----------------------------------------------------------------------------
- * js_initializer:  template for the module initializer function
- *   - $jsname:                   module name
- *   - $jscreatenamespaces:       part with code for creating namespace objects
- *   - $jscreateclasses:          part with code for creating classes
- *   - $jsregisternamespaces:     part with code for registration of namespaces
- * ----------------------------------------------------------------------------- */
-%fragment ("js_initializer", "templates") %{
 
 
     /* Create objects for namespaces */
