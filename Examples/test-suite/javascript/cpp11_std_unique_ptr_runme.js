@@ -31,7 +31,7 @@ var checkCount = function(expected_count) {
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kin))
     throw new Error("is_nullptr failed");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -54,7 +54,7 @@ var checkCount = function(expected_count) {
   }
   if (!exception_thrown)
       throw new Error("double usage of takeKlassUniquePtr should have been an error");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -87,7 +87,7 @@ var checkCount = function(expected_count) {
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kini))
     throw new Error("is_nullptr failed");
-  delete kini; // Should not fail, even though already deleted
+  kini = null;
   checkCount(0);
 }
 
@@ -116,7 +116,7 @@ checkCount(0);
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kin))
     throw new Error("is_nullptr failed");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -139,7 +139,7 @@ checkCount(0);
   }
   if (!exception_thrown)
       throw new Error("double usage of moveKlassUniquePtr should have been an error");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -172,7 +172,7 @@ checkCount(0);
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kini))
     throw new Error("is_nullptr failed");
-  delete kini; // Should not fail, even though already deleted
+  kini = null;
   checkCount(0);
 }
 
@@ -201,7 +201,7 @@ checkCount(0);
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kin))
     throw new Error("is_nullptr failed");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -224,7 +224,7 @@ checkCount(0);
   }
   if (!exception_thrown)
       throw new Error("double usage of moveRefKlassUniquePtr should have been an error");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -257,7 +257,7 @@ checkCount(0);
     throw new Error("Incorrect string: " + s);
   if (!cpp11_std_unique_ptr.is_nullptr(kini))
     throw new Error("is_nullptr failed");
-  delete kini; // Should not fail, even though already deleted
+  kini = null;
   checkCount(0);
 }
 

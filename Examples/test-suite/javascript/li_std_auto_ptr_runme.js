@@ -30,7 +30,7 @@ var checkCount = function(expected_count) {
     throw new Error("Incorrect string: " + s);
   if (!li_std_auto_ptr.is_nullptr(kin))
     throw new Error("is_nullptr failed");
-  delete kin; // Should not fail, even though already deleted
+  kin = null;
   checkCount(0);
 }
 
@@ -53,7 +53,7 @@ var checkCount = function(expected_count) {
   }
   if (!exception_thrown)
       throw new Error("double usage of takeKlassAutoPtr should have been an error");
-  delete kin; // Should not fail, even though already deleted
+  kin = null; // Should not fail, even though already deleted
   checkCount(0);
 }
 
@@ -86,7 +86,7 @@ var checkCount = function(expected_count) {
     throw new Error("Incorrect string: " + s);
   if (!li_std_auto_ptr.is_nullptr(kini))
     throw new Error("is_nullptr failed");
-  delete kini; // Should not fail, even though already deleted
+  kini = null; // Should not fail, even though already deleted
   checkCount(0);
 }
 

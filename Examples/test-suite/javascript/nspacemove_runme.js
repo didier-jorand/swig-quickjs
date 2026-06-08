@@ -2,7 +2,7 @@ var nspacemove = require("nspacemove");
 
 var color1 = new nspacemove.Ooter.Extra.Inner1.Color();
 var color = new nspacemove.Ooter.Extra.Inner1.Color(color1);
-delete color1;
+color1 = null;
 
 // class methods
 color.colorInstanceMethod(20.0);

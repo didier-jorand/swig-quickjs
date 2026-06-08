@@ -9,7 +9,7 @@ var cpp11_rvalue_reference_move = require("cpp11_rvalue_reference_move");
   cpp11_rvalue_reference_move.Counter.check_counts(1, 0, 0, 1, 0, 2);
   if (!cpp11_rvalue_reference_move.MovableCopyable.is_nullptr(mo))
     throw new Error("is_nullptr failed");
-  delete mo;
+  mo = null;
   cpp11_rvalue_reference_move.Counter.check_counts(1, 0, 0, 1, 0, 2);
 }
 
@@ -22,7 +22,7 @@ var cpp11_rvalue_reference_move = require("cpp11_rvalue_reference_move");
   cpp11_rvalue_reference_move.Counter.check_counts(1, 0, 0, 1, 0, 1);
   if (!cpp11_rvalue_reference_move.MovableCopyable.is_nullptr(mo))
     throw new Error("is_nullptr failed");
-  delete mo;
+  mo = null;
   cpp11_rvalue_reference_move.Counter.check_counts(1, 0, 0, 1, 0, 1);
   // delete mo_moved;
   // cpp11_rvalue_reference_move.Counter.check_counts(1, 0, 0, 1, 0, 2);
@@ -41,7 +41,7 @@ var cpp11_rvalue_reference_move = require("cpp11_rvalue_reference_move");
   cpp11_rvalue_reference_move.Counter.check_counts(2, 0, 0, 0, 1, 1);
   if (!cpp11_rvalue_reference_move.MovableCopyable.is_nullptr(mo222))
     throw new Error("is_nullptr failed");
-  delete mo222;
+  mo222 = null;
   cpp11_rvalue_reference_move.Counter.check_counts(2, 0, 0, 0, 1, 1);
   // delete mo111;
   // cpp11_rvalue_reference_move.Counter.check_counts(2, 0, 0, 0, 1, 2);

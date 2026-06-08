@@ -2,7 +2,7 @@ var nspace = require("nspace");
 
 var color1 = new nspace.Outer.Inner1.Color();
 var color = new nspace.Outer.Inner1.Color(color1);
-delete color1;
+color1 = null;
 
 // class methods
 color.colorInstanceMethod(20.0);
