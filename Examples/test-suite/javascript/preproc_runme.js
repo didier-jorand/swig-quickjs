@@ -1,3 +1,4 @@
+"use strict";
 var preproc = require("preproc");
 
 if (preproc.endif != 1)

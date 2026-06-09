@@ -1,3 +1,4 @@
+"use strict";
 var li_factory = require("li_factory");
 
 var circle = li_factory.Geometry.create(li_factory.Geometry.CIRCLE);

@@ -1,3 +1,4 @@
+"use strict";
 var namespace_typemap = require("namespace_typemap");
 
 if (namespace_typemap.stest1("hello") != "hello") {

@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_move_only = require("cpp11_move_only");
 
 // Output

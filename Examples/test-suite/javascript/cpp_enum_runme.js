@@ -1,3 +1,4 @@
+"use strict";
 var cpp_enum = require("cpp_enum");
 
 var f = new cpp_enum.Foo()

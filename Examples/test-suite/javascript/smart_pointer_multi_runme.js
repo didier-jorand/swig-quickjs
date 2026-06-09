@@ -1,3 +1,4 @@
+"use strict";
 var smart_pointer_multi = require("smart_pointer_multi");
 
 var f = new smart_pointer_multi.Foo();

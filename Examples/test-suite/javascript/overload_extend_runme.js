@@ -1,3 +1,4 @@
+"use strict";
 var overload_extend = require("overload_extend")
 
 var f = new overload_extend.Foo()

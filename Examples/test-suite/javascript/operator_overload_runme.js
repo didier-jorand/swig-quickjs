@@ -1,3 +1,4 @@
+"use strict";
 var operator_overload = require("operator_overload");
 var { Op } = operator_overload;
 

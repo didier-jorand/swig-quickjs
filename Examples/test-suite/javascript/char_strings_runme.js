@@ -1,3 +1,4 @@
+"use strict";
 var char_strings = require("char_strings");
 
 var assertIsEqual = function(expected, actual) {

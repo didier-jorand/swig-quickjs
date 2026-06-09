@@ -1,3 +1,4 @@
+"use strict";
 var smart_pointer_member = require("smart_pointer_member");
 
 

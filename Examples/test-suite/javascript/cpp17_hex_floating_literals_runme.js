@@ -1,3 +1,4 @@
+"use strict";
 var cpp17_hex_floating_literals = require("cpp17_hex_floating_literals");
 
 if (cpp17_hex_floating_literals.f1 != 0.) {

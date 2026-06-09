@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_strongly_typed_enumerations = require("cpp11_strongly_typed_enumerations");
 
 function enumCheck(actual, expected) {

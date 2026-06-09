@@ -1,3 +1,4 @@
+"use strict";
 var ignore_parameter = require('ignore_parameter');
 
 function check(a, b) {

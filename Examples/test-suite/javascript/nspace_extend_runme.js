@@ -1,3 +1,4 @@
+"use strict";
 var nspace_extend = require("nspace_extend");
 
 // constructors and destructors

@@ -1,3 +1,4 @@
+"use strict";
 var abstract_virtual = require("abstract_virtual");
 
 var d = new abstract_virtual.D()

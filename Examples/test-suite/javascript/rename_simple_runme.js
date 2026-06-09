@@ -1,3 +1,4 @@
+"use strict";
 var rename_simple = require("rename_simple");
 var NewStruct = rename_simple.NewStruct;
 

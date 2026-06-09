@@ -1,3 +1,4 @@
+"use strict";
 var typedef_scope = require("typedef_scope");
 
 var b = new typedef_scope.Bar();

@@ -1,3 +1,4 @@
+"use strict";
 var template_ref_type = require("template_ref_type");
 
 var xr = new template_ref_type.XC();

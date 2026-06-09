@@ -1,3 +1,4 @@
+"use strict";
 var functors = require("functors");
 
 var a = new functors.Functor0(10);

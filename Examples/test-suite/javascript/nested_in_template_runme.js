@@ -1,3 +1,4 @@
+"use strict";
 var nested_in_template = require("nested_in_template");
 
 var cd = new nested_in_template.ConcreteDerived(88);

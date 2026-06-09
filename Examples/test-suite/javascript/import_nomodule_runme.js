@@ -1,3 +1,4 @@
+"use strict";
 var import_nomodule = require("import_nomodule");
 
 var f = import_nomodule.create_Foo();

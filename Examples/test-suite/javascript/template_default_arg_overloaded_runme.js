@@ -1,3 +1,4 @@
+"use strict";
 var template_default_arg_overloaded = require("template_default_arg_overloaded");
 
 function check(expected, got) {

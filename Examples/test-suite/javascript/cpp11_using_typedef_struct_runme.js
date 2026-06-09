@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_using_typedef_struct = require("cpp11_using_typedef_struct");
 
 var b = new cpp11_using_typedef_struct.AffineMatrix();

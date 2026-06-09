@@ -1,3 +1,4 @@
+"use strict";
 var overload_simple = require("overload_simple");
 
 if (overload_simple.foo(3) != "foo:int") {

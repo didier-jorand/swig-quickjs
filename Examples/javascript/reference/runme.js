@@ -1,3 +1,4 @@
+"use strict";
 // This file illustrates the manipulation of C++ references in Javascript.
 var example = require("example");
 

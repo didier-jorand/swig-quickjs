@@ -1,3 +1,4 @@
+"use strict";
 var iadd = require('iadd');
 
 var f = new iadd.Foo();

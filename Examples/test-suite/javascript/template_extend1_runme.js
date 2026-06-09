@@ -1,3 +1,4 @@
+"use strict";
 var template_extend1 = require("template_extend1");
 
 var a = new template_extend1.lBaz();

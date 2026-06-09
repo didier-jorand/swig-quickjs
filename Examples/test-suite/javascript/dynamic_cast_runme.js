@@ -1,3 +1,4 @@
+"use strict";
 var dynamic_cast = require("dynamic_cast");
 
 var f = new dynamic_cast.Foo();

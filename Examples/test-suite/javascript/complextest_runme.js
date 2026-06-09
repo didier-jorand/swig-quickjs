@@ -1,3 +1,4 @@
+"use strict";
 var complextest = require("complextest");
 
 var a = [-1,2];

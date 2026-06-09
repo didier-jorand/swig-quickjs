@@ -1,3 +1,4 @@
+"use strict";
 var class_scope_weird = require("class_scope_weird");
 
 var f = new class_scope_weird.Foo();

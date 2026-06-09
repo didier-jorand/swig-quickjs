@@ -1,3 +1,4 @@
+"use strict";
 var profiletest = require("profiletest");
 
 a = new profiletest.A();

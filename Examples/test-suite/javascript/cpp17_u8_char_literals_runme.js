@@ -1,3 +1,4 @@
+"use strict";
 var cpp17_u8_char_literals = require("cpp17_u8_char_literals");
 
 if (cpp17_u8_char_literals.a != "a") {

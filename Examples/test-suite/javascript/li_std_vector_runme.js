@@ -1,3 +1,4 @@
+"use strict";
 var li_std_vector = require("li_std_vector");
 
 if (li_std_vector.typedef_test(101) != 101) {

@@ -1,3 +1,4 @@
+"use strict";
 var varargs_overload = require("varargs_overload");
 
 if (varargs_overload.vararg_over1("Hello") != "Hello") {

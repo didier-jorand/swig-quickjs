@@ -1,3 +1,4 @@
+"use strict";
 var langobj = require("langobj");
 
 var x = "hello";

@@ -1,3 +1,4 @@
+"use strict";
 var char_binary_rev_len = require("char_binary_rev_len");
 
 var t = new char_binary_rev_len.Test();

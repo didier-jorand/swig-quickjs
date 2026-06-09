@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_move_typemaps = require("cpp11_move_typemaps");
 
 cpp11_move_typemaps.Counter.reset_counts();

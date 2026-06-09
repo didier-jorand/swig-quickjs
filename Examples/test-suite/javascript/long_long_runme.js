@@ -1,3 +1,4 @@
+"use strict";
 // long_long_runme.js
 var long_long = require("long_long");
 var ll = long_long;

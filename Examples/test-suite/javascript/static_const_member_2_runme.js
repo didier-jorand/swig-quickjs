@@ -1,3 +1,4 @@
+"use strict";
 var static_const_member_2 = require("static_const_member_2");
 
 var c = new static_const_member_2.Test_int();

@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_rvalue_reference = require("cpp11_rvalue_reference");
 
 var a = new cpp11_rvalue_reference.A();

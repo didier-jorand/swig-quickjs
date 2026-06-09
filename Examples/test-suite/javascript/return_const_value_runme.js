@@ -1,3 +1,4 @@
+"use strict";
 var return_const_value = require("return_const_value");
 
 var p = return_const_value.Foo_ptr.getPtr();

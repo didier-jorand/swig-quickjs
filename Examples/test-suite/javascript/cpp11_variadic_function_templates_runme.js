@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_variadic_function_templates = require("cpp11_variadic_function_templates");
 
 const {A, B, C, D, variadicmix1} = cpp11_variadic_function_templates;

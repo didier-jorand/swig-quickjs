@@ -1,3 +1,4 @@
+"use strict";
 
 var li_cdata = require("li_cdata");
 

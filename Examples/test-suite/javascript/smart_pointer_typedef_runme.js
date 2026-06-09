@@ -1,3 +1,4 @@
+"use strict";
 var smart_pointer_typedef = require("smart_pointer_typedef");
 
 var f = new smart_pointer_typedef.Foo();

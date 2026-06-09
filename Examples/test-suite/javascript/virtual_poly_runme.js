@@ -1,3 +1,4 @@
+"use strict";
 var virtual_poly = require("virtual_poly");
 
 var d = new virtual_poly.NDouble(3.5);

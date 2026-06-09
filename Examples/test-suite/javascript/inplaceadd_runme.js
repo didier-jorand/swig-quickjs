@@ -1,3 +1,4 @@
+"use strict";
 var inplaceadd = require("inplaceadd");
 var a = new inplaceadd.A(7);
 

@@ -1,3 +1,4 @@
+"use strict";
 var typename = require("typename");
 var f = new typename.Foo();
 var b = new typename.Bar();

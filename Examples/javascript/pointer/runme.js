@@ -1,3 +1,4 @@
+"use strict";
 var example = require("example");
 
 // First create some objects using the pointer library.

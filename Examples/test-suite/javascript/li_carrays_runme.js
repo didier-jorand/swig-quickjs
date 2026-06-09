@@ -1,3 +1,4 @@
+"use strict";
 var li_carrays = require("li_carrays");
 
 var d = new li_carrays.doubleArray(10);

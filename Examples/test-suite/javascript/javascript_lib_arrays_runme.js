@@ -1,3 +1,4 @@
+"use strict";
 var javascript_lib_arrays = require("javascript_lib_arrays");
 
 var arr = [1, 2, 3, 4, 5];

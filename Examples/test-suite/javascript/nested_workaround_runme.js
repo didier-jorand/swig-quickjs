@@ -1,3 +1,4 @@
+"use strict";
 var nested_workaround = require("nested_workaround");
 
 var inner = new nested_workaround.Inner(5);

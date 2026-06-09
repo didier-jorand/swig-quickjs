@@ -1,3 +1,4 @@
+"use strict";
 var nested_template_base = require("nested_template_base");
 
 var ois = new nested_template_base.InnerS(123);

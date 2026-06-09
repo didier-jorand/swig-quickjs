@@ -1,3 +1,4 @@
+"use strict";
 var template_template_parameters = require("template_template_parameters");
 
 // Test part 1

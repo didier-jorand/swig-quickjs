@@ -1,3 +1,4 @@
+"use strict";
 var typedef_class = require("typedef_class");
 
 var a = new typedef_class.RealA();

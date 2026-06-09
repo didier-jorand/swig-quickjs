@@ -1,3 +1,4 @@
+"use strict";
 var naturalvar = require("naturalvar");
 
 var f = new naturalvar.Foo();

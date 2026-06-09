@@ -1,3 +1,4 @@
+"use strict";
 var exception_classname = require("exception_classname");
 
 var a = new exception_classname.Exception();

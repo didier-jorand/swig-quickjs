@@ -1,3 +1,4 @@
+"use strict";
 var template_default_arg_overloaded_extend = require("template_default_arg_overloaded_extend");
 
 function check(flag) {

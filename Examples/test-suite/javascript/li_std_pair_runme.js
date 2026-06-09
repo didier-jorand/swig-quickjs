@@ -1,3 +1,4 @@
+"use strict";
 var li_std_pair = require("li_std_pair");
 
 function check(flag) {

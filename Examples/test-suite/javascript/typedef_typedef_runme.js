@@ -1,3 +1,4 @@
+"use strict";
 var typedef_typedef = require("typedef_typedef");
 
 var b = new typedef_typedef.B();

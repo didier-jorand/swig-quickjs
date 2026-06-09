@@ -1,3 +1,4 @@
+"use strict";
 var callback = require("callback");
 
 if (callback.foo(2) !== 2) {

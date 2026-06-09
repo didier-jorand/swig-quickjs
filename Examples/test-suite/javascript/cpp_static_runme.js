@@ -1,3 +1,4 @@
+"use strict";
 var cpp_static = require("cpp_static");
 
 cpp_static.StaticFunctionTest.static_func();

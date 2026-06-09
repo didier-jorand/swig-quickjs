@@ -1,3 +1,4 @@
+"use strict";
 var struct_initialization = require("struct_initialization");
 
 if (struct_initialization.instanceC1.x != 10) {

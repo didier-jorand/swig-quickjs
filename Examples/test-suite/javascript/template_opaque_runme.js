@@ -1,3 +1,4 @@
+"use strict";
 var template_opaque = require("template_opaque");
 
 var v = new template_opaque.OpaqueVectorType(10);

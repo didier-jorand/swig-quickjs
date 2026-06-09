@@ -1,3 +1,4 @@
+"use strict";
 var grouping = require("grouping");
 
 var x = grouping.test1(42);

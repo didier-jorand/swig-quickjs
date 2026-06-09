@@ -1,3 +1,4 @@
+"use strict";
 var reference_global_vars = require("reference_global_vars");
 
 // const class reference variable

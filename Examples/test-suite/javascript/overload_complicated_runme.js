@@ -1,3 +1,4 @@
+"use strict";
 var overload_complicated = require("overload_complicated");
 
 var pInt = null;

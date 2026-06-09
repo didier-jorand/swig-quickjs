@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_std_unique_ptr = require("cpp11_std_unique_ptr");
 
 var checkCount = function(expected_count) {

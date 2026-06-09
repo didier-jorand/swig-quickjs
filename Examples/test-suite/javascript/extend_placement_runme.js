@@ -1,3 +1,4 @@
+"use strict";
 var extend_placement = require("extend_placement");
 
 var foo = new extend_placement.Foo();

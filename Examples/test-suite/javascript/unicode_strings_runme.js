@@ -1,3 +1,4 @@
+"use strict";
 var unicode_strings = require("unicode_strings");
 
 // This uses slightly different encoding than the Python test

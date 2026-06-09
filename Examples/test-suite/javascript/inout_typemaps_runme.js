@@ -1,3 +1,4 @@
+"use strict";
 var inout_typemaps = require("inout_typemaps");
 
 if (inout_typemaps.AddOne1(1) != 2) {

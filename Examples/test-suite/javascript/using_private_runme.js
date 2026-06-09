@@ -1,3 +1,4 @@
+"use strict";
 var using_private = require("using_private");
 
 var f = new using_private.FooBar();

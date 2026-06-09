@@ -1,3 +1,4 @@
+"use strict";
 var typedef_classforward_same_name = require("typedef_classforward_same_name");
 
 var foo = new typedef_classforward_same_name.Foo();

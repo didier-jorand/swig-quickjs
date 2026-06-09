@@ -1,3 +1,4 @@
+"use strict";
 var disown = require("disown");
 
 var a = new disown.A();

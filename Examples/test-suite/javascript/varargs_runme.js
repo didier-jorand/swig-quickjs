@@ -1,3 +1,4 @@
+"use strict";
 var varargs = require("varargs");
 
 if (varargs.test("Hello") != "Hello") {

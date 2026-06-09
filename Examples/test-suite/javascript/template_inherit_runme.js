@@ -1,3 +1,4 @@
+"use strict";
 var template_inherit = require("template_inherit");
 var a = new template_inherit.FooInt();
 var b = new template_inherit.FooDouble();

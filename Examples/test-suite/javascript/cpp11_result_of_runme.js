@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_result_of = require("cpp11_result_of");
 
 var result = cpp11_result_of.test_result(cpp11_result_of.SQUARE, 3.0);

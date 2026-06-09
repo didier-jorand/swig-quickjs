@@ -1,3 +1,4 @@
+"use strict";
 var namespace_class = require("namespace_class");
 
 var p, error;

@@ -1,3 +1,4 @@
+"use strict";
 var typemap_documentation = require("typemap_documentation");
 
 var f = new typemap_documentation.Foo();

@@ -1,3 +1,4 @@
+"use strict";
 var nspacemove_nested = require("nspacemove_nested");
 
 // outer classes

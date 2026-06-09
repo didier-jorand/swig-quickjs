@@ -1,3 +1,4 @@
+"use strict";
 var virtual_derivation = require("virtual_derivation");
 //
 // very innocent example

@@ -1,3 +1,4 @@
+"use strict";
 var nspacemove = require("nspacemove");
 
 var color1 = new nspacemove.Ooter.Extra.Inner1.Color();

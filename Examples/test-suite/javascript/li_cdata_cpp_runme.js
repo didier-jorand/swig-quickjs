@@ -1,3 +1,4 @@
+"use strict";
 
 var li_cdata_cpp = require("li_cdata_cpp");
 

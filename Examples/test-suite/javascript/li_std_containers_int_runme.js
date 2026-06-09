@@ -1,3 +1,4 @@
+"use strict";
 // In JS std::vector and std::list cannot behave as native containers
 // because there is no overloading
 var li_std_containers_int = require("li_std_containers_int");

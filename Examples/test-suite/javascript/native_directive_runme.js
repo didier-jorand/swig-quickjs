@@ -1,3 +1,4 @@
+"use strict";
 var native_directive = require("native_directive");
 
 (function main() {

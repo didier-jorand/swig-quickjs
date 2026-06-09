@@ -1,3 +1,4 @@
+"use strict";
 var name_warnings = require("name_warnings");
 
 function check(flag) {

@@ -1,3 +1,4 @@
+"use strict";
 var memberin_extend_c = require("memberin_extend_c");
 
 var t = new memberin_extend_c.Person();

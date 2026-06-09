@@ -1,3 +1,4 @@
+"use strict";
 var cpp_namespace = require("cpp_namespace");
 
 var n = cpp_namespace.fact(4);

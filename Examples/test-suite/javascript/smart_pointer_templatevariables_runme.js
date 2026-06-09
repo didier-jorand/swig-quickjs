@@ -1,3 +1,4 @@
+"use strict";
 var smart_pointer_templatevariables = require("smart_pointer_templatevariables");
 
 var d = new smart_pointer_templatevariables.DiffImContainerPtr_D(smart_pointer_templatevariables.create(1234, 5678));

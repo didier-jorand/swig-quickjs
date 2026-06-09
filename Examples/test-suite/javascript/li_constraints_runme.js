@@ -1,3 +1,4 @@
+"use strict";
 var li_constraints = require("li_constraints");
 
 function check_double(except, f, val, name) {

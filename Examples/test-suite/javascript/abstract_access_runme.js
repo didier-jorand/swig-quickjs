@@ -1,3 +1,4 @@
+"use strict";
 var abstract_access = require("abstract_access");
 
 var d = new abstract_access.D()

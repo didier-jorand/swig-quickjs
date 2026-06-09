@@ -1,3 +1,4 @@
+"use strict";
 var li_std_vector_enum = require("li_std_vector_enum");
 
 

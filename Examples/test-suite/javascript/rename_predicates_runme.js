@@ -1,3 +1,4 @@
+"use strict";
 var rename_predicates = require("rename_predicates");
 
 var r = new rename_predicates.RenamePredicates(123);

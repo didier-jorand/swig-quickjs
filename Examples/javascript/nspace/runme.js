@@ -1,3 +1,4 @@
+"use strict";
 // File: runme.js
 
 // This file illustrates class C++ interface generated

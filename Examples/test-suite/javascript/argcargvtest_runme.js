@@ -1,3 +1,4 @@
+"use strict";
 var argcargvtest = require("argcargvtest");
 var test = argcargvtest;
 

@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_decltype = require("cpp11_decltype");
 
 var a = new cpp11_decltype.A;

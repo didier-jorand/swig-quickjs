@@ -1,3 +1,4 @@
+"use strict";
 var operbool = require("operbool");
 const b = new operbool.Test();
 if (b.operator_bool()) {

@@ -1,3 +1,4 @@
+"use strict";
 var li_std_pair_using = require("li_std_pair_using");
 
 var one = new li_std_pair_using.StringStringPair("one", "numero uno");

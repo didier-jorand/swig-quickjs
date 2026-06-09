@@ -1,3 +1,4 @@
+"use strict";
 var global_functions = require("global_functions");
 
 

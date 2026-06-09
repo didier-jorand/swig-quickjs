@@ -1,3 +1,4 @@
+"use strict";
 var special_variable_macros = require("special_variable_macros");
 
 var cvar = special_variable_macros;

@@ -1,3 +1,4 @@
+"use strict";
 var integers = require("integers");
 
 function checkOne(val, signed, typeName) {

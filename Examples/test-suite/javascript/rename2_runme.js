@@ -1,3 +1,4 @@
+"use strict";
 var rename = require("rename2");
 
 function part1() {

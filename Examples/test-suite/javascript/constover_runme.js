@@ -1,3 +1,4 @@
+"use strict";
 var constover = require("constover");
 
 var p = constover.test("test");

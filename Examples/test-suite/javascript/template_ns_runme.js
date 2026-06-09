@@ -1,3 +1,4 @@
+"use strict";
 var template_ns = require("template_ns");
 var p1 = new template_ns.pairii(2, 3);
 var p2 = new template_ns.pairii(p1);

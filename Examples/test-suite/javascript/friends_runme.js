@@ -1,3 +1,4 @@
+"use strict";
 var friends = require("friends");
 
 var a = new friends.A(2);

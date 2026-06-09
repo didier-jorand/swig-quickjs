@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_null_pointer_constant = require("cpp11_null_pointer_constant");
 
 var a = new cpp11_null_pointer_constant.A();

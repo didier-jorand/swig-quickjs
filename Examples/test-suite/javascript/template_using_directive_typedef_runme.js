@@ -1,3 +1,4 @@
+"use strict";
 var template_using_directive_typedef = require("template_using_directive_typedef")
 
 var vo = new template_using_directive_typedef.Vector_Obj();

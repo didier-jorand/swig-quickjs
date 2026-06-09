@@ -1,3 +1,4 @@
+"use strict";
 var typemap_template_typedef = require("typemap_template_typedef");
 
 function check(got, expected) {

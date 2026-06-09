@@ -1,3 +1,4 @@
+"use strict";
 var template_default_arg = require("template_default_arg");
 
 

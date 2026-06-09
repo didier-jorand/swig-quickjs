@@ -1,3 +1,4 @@
+"use strict";
 var pointer_reference = require("pointer_reference");
 
 var s = pointer_reference.get();

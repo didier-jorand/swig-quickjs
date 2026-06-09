@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_final_class = require("cpp11_final_class");
 
 var fc1 = new cpp11_final_class.FinalClass1();

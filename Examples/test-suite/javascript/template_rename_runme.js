@@ -1,3 +1,4 @@
+"use strict";
 var template_rename = require("template_rename");
 
 var i = new template_rename.iFoo();

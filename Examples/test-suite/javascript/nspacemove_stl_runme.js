@@ -1,3 +1,4 @@
+"use strict";
 var nspacemove_stl = require("nspacemove_stl");
 
 var vi = new nspacemove_stl.CPlusPlus.Standard.Ints.VectorInt()

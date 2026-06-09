@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_ref_qualifiers = require("cpp11_ref_qualifiers");
 
 var h = new cpp11_ref_qualifiers.Host();

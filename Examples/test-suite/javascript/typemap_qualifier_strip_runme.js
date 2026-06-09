@@ -1,3 +1,4 @@
+"use strict";
 var typemap_qualifier_strip = require("typemap_qualifier_strip");
 
 var val = typemap_qualifier_strip.create_int(111);

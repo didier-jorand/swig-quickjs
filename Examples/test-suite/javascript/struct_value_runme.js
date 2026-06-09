@@ -1,3 +1,4 @@
+"use strict";
 var struct_value = require("struct_value");
 
 var b = new struct_value.Bar();

@@ -1,3 +1,4 @@
+"use strict";
 var swig_exception = require("swig_exception");
 
 var c = new swig_exception.Circle(10);

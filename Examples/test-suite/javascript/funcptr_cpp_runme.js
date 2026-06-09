@@ -1,3 +1,4 @@
+"use strict";
 var funcptr_cpp = require("funcptr_cpp");
 
 if (funcptr_cpp.call1(funcptr_cpp.ADD_BY_VALUE, 10, 11) != 21) {

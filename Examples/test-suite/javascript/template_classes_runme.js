@@ -1,3 +1,4 @@
+"use strict";
 var template_classes = require("template_classes");
 
 // This test is just testing incorrect number of arguments/parameters checking

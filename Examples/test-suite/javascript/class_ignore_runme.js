@@ -1,3 +1,4 @@
+"use strict";
 var class_ignore = require("class_ignore");
 
 var a = new class_ignore.Bar();

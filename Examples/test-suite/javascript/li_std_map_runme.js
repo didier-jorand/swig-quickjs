@@ -1,3 +1,4 @@
+"use strict";
 // In JavaScript, std::map has very limited capabilities and no iterator at all
 var li_std_map = require("li_std_map");
 

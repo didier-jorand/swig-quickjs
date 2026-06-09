@@ -1,3 +1,4 @@
+"use strict";
 var array_member = require("array_member");
 
 var f = new array_member.Foo();

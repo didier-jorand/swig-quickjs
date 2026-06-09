@@ -1,3 +1,4 @@
+"use strict";
 var overload_extend2 = require("overload_extend2");
 
 var f = new overload_extend2.Foo();

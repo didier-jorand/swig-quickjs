@@ -1,3 +1,4 @@
+"use strict";
 var input = require("input");
 
 var f = new input.Foo();

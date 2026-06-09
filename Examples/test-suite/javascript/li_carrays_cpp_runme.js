@@ -1,3 +1,4 @@
+"use strict";
 var li_carrays_cpp = require("li_carrays_cpp");
 
 var d = new li_carrays_cpp.doubleArray(10);

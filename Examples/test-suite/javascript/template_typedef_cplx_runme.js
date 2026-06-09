@@ -1,3 +1,4 @@
+"use strict";
 var template_typedef_cplx = require("template_typedef_cplx");
 
 //

@@ -1,3 +1,4 @@
+"use strict";
 var default_args = require('default_args');
 var ec = new default_args.EnumClass();
 if (!ec.blah()) {

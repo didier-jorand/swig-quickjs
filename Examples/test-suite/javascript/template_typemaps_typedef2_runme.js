@@ -1,3 +1,4 @@
+"use strict";
 var template_typemaps_typedef2 = require("template_typemaps_typedef2");
 
 var m1 = new template_typemaps_typedef2.MultimapIntA();

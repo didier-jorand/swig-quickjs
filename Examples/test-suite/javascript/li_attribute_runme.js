@@ -1,3 +1,4 @@
+"use strict";
 var li_attribute = require("li_attribute");
 
 var aa = new li_attribute.A(1, 2, 3);

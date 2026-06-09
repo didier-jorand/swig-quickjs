@@ -1,3 +1,4 @@
+"use strict";
 // Example using pointers to member functions
 var member_pointer_const = require("member_pointer_const");
 

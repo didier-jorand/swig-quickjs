@@ -1,3 +1,4 @@
+"use strict";
 var li_std_auto_ptr = require("li_std_auto_ptr");
 
 var checkCount = function(expected_count) {

@@ -1,3 +1,4 @@
+"use strict";
 var constructor_copy = require("constructor_copy");
 
 var f1 = new constructor_copy.Foo1(3);

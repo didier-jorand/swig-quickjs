@@ -1,3 +1,4 @@
+"use strict";
 var char_binary = require("char_binary");
 
 var t = new char_binary.Test();

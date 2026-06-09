@@ -1,3 +1,4 @@
+"use strict";
 var li_std_map_member = require("li_std_map_member");
 
 var a = new li_std_map_member.mapita();

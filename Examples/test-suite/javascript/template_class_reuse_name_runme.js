@@ -1,3 +1,4 @@
+"use strict";
 var template_class_reuse_name = require("template_class_reuse_name");
 
 new template_class_reuse_name.Bool1().tt()

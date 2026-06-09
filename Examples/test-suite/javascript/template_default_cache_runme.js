@@ -1,3 +1,4 @@
+"use strict";
 var template_default_cache = require("template_default_cache");
 
 var ap = template_default_cache.get_mp_a();

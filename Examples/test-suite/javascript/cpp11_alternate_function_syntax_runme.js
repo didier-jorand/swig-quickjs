@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_alternate_function_syntax = require("cpp11_alternate_function_syntax");
 
 var a = new cpp11_alternate_function_syntax.SomeStruct();

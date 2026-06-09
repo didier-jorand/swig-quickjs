@@ -1,3 +1,4 @@
+"use strict";
 var overload_bool = require("overload_bool");
 
 // Overloading bool, int, string

@@ -1,3 +1,4 @@
+"use strict";
 var typedef_funcptr = require("typedef_funcptr");
 
 var a = 100;

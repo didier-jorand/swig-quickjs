@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_thread_local = require("cpp11_thread_local");
 
 var t = new cpp11_thread_local.ThreadLocals();

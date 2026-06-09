@@ -1,3 +1,4 @@
+"use strict";
 var li_cdata_bytes_cpp = require("li_cdata_bytes_cpp");
 
 var m = li_cdata_bytes_cpp.predefStr();

@@ -1,3 +1,4 @@
+"use strict";
 var director_alternating = require("director_alternating");
 
 var id = director_alternating.getBar().id();

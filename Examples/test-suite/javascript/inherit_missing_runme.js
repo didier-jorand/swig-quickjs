@@ -1,3 +1,4 @@
+"use strict";
 var inherit_missing = require("inherit_missing");
 
 var a = inherit_missing.new_Foo()

@@ -1,3 +1,4 @@
+"use strict";
 var cpp20_spaceship_operator = require("cpp20_spaceship_operator");
 
 function check_equal(a, b) {

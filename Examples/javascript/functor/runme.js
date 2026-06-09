@@ -1,3 +1,4 @@
+"use strict";
 var example = require("example");
 
 var a = new example.intSum(1);

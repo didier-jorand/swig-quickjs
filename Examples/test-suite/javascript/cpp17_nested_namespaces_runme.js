@@ -1,3 +1,4 @@
+"use strict";
 var cpp17_nested_namespaces = require("cpp17_nested_namespaces");
 
 new cpp17_nested_namespaces.A1Struct().A1Method()

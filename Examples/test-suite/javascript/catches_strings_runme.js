@@ -1,3 +1,4 @@
+"use strict";
 var catches_strings = require("catches_strings");
 
 var exception_thrown = false;

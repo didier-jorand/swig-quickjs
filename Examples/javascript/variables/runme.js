@@ -1,3 +1,4 @@
+"use strict";
 var example = require("example");
 
 // Try to set the values of some global variables

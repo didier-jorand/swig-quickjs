@@ -1,3 +1,4 @@
+"use strict";
 var rename_strip_encoder = require("rename_strip_encoder");
 
 var s = new rename_strip_encoder.SomeWidget();

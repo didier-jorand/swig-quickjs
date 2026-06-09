@@ -1,3 +1,4 @@
+"use strict";
 var primitive_ref = require("primitive_ref");
 
 if (primitive_ref.ref_int(3) != 3) {

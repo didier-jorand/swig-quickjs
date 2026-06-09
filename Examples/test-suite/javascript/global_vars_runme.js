@@ -1,3 +1,4 @@
+"use strict";
 var global_vars = require("global_vars");
 
 // In javascript, assigning to a non-existent variable is

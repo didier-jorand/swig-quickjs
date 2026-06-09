@@ -1,3 +1,4 @@
+"use strict";
 // Check usage of template attributes
 
 var li_attribute_template = require("li_attribute_template");

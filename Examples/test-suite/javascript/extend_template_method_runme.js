@@ -1,3 +1,4 @@
+"use strict";
 var extend_template_method = require("extend_template_method");
 
 var em = new extend_template_method.ExtendMe();

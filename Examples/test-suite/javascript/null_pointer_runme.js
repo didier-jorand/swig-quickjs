@@ -1,3 +1,4 @@
+"use strict";
 var null_pointer = require("null_pointer");
 
 if (!null_pointer.funk(null)) {

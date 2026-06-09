@@ -1,3 +1,4 @@
+"use strict";
 // cpp_basic_runme.js
 var cpp_basic = require("cpp_basic");
 var cb=cpp_basic;

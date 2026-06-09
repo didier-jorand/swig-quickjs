@@ -1,3 +1,4 @@
+"use strict";
 var typemap_out_optimal = require("typemap_out_optimal");
 
 typemap_out_optimal.XX.trace = false;

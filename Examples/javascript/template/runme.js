@@ -1,3 +1,4 @@
+"use strict";
 var example = require("example");
 
 //Call some templated functions

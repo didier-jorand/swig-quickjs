@@ -1,3 +1,4 @@
+"use strict";
 var rename_rstrip_encoder = require("rename_rstrip_encoder");
 
 var s = new rename_rstrip_encoder.SomeThing();

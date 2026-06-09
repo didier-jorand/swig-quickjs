@@ -1,3 +1,4 @@
+"use strict";
 var final_c = require("final_c");
 
 final_c.init();

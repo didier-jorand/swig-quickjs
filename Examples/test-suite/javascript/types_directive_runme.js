@@ -1,3 +1,4 @@
+"use strict";
 var types_directive = require("types_directive");
 
 var d1 = new types_directive.Time1(2001, 2, 3, 60)

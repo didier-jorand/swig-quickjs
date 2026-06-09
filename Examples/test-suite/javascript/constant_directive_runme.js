@@ -1,3 +1,4 @@
+"use strict";
 var constant_directive = require("constant_directive");
 
 if (!constant_directive.TYPE1_CONSTANT1 instanceof constant_directive.Type1) {

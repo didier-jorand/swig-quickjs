@@ -1,3 +1,4 @@
+"use strict";
 var multivalue = require("multivalue");
 
 var [q, r] = multivalue.divide_l(37, 5);

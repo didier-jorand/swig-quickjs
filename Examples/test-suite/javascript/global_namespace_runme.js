@@ -1,3 +1,4 @@
+"use strict";
 var global_namespace = require("global_namespace");
 
 

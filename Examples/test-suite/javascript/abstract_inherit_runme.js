@@ -1,3 +1,4 @@
+"use strict";
 var abstract_inherit = require("abstract_inherit");
 
 // Shouldn't be able to instantiate any of these classes

@@ -1,3 +1,4 @@
+"use strict";
 var abstract_typedef = require("abstract_typedef");
 
 var e = new abstract_typedef.Engine();

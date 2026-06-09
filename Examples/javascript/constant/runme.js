@@ -1,3 +1,4 @@
+"use strict";
 var example = require("example");
 
 console.log("ICONST  = " + example.ICONST  + " (should be 42)");

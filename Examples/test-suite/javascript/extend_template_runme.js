@@ -1,3 +1,4 @@
+"use strict";
 var extend_template = require("extend_template");
 
 var f = new extend_template.Foo_0();

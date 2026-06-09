@@ -1,3 +1,4 @@
+"use strict";
 var ret_by_value = require("ret_by_value");
 
 var a = ret_by_value.get_test();

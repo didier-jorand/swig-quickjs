@@ -1,3 +1,4 @@
+"use strict";
 var preproc_defined = require("preproc_defined");
 
 if (preproc_defined.call_checking() != 1) {

@@ -1,3 +1,4 @@
+"use strict";
 var li_cdata_carrays_cpp = require("li_cdata_carrays_cpp");
 
 var ia = new li_cdata_carrays_cpp.intArray(5);

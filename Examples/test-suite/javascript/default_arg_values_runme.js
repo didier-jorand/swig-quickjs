@@ -1,3 +1,4 @@
+"use strict";
 var default_arg_values = require("default_arg_values");
 
 var d = new default_arg_values.Display();

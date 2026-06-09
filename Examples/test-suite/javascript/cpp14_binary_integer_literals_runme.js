@@ -1,3 +1,4 @@
+"use strict";
 var cpp14_binary_integer_literals = require("cpp14_binary_integer_literals");
 
 if (cpp14_binary_integer_literals.b1 != 1) {

@@ -1,3 +1,4 @@
+"use strict";
 var string_simple = require("string_simple");
 
 // Test unicode string

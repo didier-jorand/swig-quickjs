@@ -1,3 +1,4 @@
+"use strict";
 var typedef_inherit = require("typedef_inherit");
 
 var a = new typedef_inherit.Foo();

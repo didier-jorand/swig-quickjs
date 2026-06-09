@@ -1,3 +1,4 @@
+"use strict";
 var li_cpointer = require("li_cpointer");
 
 

@@ -1,3 +1,4 @@
+"use strict";
 var cpp11_rvalue_reference_move = require("cpp11_rvalue_reference_move");
 
 {

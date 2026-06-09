@@ -1,3 +1,4 @@
+"use strict";
 var infinity = require("infinity");
 
 infinity.initialise_MYINFINITY();

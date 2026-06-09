@@ -1,3 +1,4 @@
+"use strict";
 // There are no typecheck typemaps in Javascript yet, so most of this test
 // does not actually worked - the check functions have thus been commented out.
 var overload_null = require("overload_null");

@@ -1,3 +1,4 @@
+"use strict";
 var overload_template_fast = require("overload_template_fast");
 
 var f = overload_template_fast.foo();

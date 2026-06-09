@@ -1,3 +1,4 @@
+"use strict";
 var default_args_c = require("default_args_c");
 
 if (default_args_c.foo1() != 1) {
