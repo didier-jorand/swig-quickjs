@@ -513,9 +513,10 @@ int JAVASCRIPT::classHandler(Node *n) {
         if (Strchr(it.item, ':')) {
           // Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (from another module)\n", NIL);
           String *pmn;
-          char *s = strdup((const char *)Data(it.item));
-          char *parent_module, *parent_class = s;
-          parent_module = strsep(&parent_class, ":");
+          char *s = Char(Data(it.item));
+          char *parent_module, *parent_class;
+          parent_module = strtok(s, ":");
+          parent_class = strtok(NULL, ":");
           // Printv(stdout, "### parent module is ", parent_module, ", parent_class is ", parent_class, "\n", NIL);
           p = NewHash();
           Setattr(p, "nodeType", "class");
@@ -530,7 +531,6 @@ int JAVASCRIPT::classHandler(Node *n) {
           // Swig_print_node(p);
           Append(baselist, p);
           // Swig_print_node(n);
-          free(s);
           Delete(pmn);
         } else {
           Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored)\n", NIL);
