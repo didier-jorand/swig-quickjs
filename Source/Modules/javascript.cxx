@@ -473,6 +473,74 @@ int JAVASCRIPT::nativeWrapper(Node *n) {
 int JAVASCRIPT::classHandler(Node *n) {
   emitter->switchNamespace(n);
 
+  // Implements "GObject" inheritance, allowing a C struct to behave like if it inherits (C++ like) from
+  // another C structure. This is (for now) implemented as a feature "cbases" which list the list of
+  // parent structure names. This parent name can be directly the structure name or the reference to a
+  // structure defined in another module: {module}:{struct name}
+  // Example:
+  // feature("cbases", "modA:structA,B")
+  // typedef struct { ... } C;
+  // struct C will inherit from structA and from B
+  // In the original sources, it would look like
+  // struct C { structA _a; B _b; ... }
+  Node *p;
+  List *baselist;
+
+  if (Getattr(n, "feature:cbases")) {
+    List *ilist = Split(Getattr(n, "feature:cbases"), ',', -1);
+    Iterator it = First(ilist);
+    baselist = Getattr(n, "bases");
+    if (!baselist) {
+      baselist = NewList();
+      Setattr(n, "bases", baselist);
+    }
+    while (it.item) {
+      p = classLookup(it.item);
+      if (p && Getattr(p, "classtype")) {
+        // The cbase is a known type, record it in the class baselist and as a candidate for type cast.
+        Append(baselist, p);
+        SwigType_inherit(Getattr(n, "classtype"), Getattr(p, "classtype"), 0, 0);
+        // Printv(stdout, Getattr(n,"sym:name"), "\tbase class (added): ", Getattr(p, "sym:name"), "(",  Getattr(p, "quickjs:mangledname"), ")\n", NIL);
+        // Printv(stdout, "\t\t", Getattr(n,"classtype"), "\t ", Getattr(p, "classtype"), "\n", NIL);
+      } else {
+        // XXX in progress: assume cross-module inheritance (if basename like '{module}:{class}' */
+        if (p) {
+          Printv(
+            stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' ", Getattr(p, "kind"), " (used before declaration?)\n", NIL);
+          // Swig_print_node(p);
+        }
+
+        if (Strchr(it.item, ':')) {
+          // Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (from another module)\n", NIL);
+          String *pmn;
+          char *s = strdup((const char *)Data(it.item));
+          char *parent_module, *parent_class = s;
+          parent_module = strsep(&parent_class, ":");
+          // Printv(stdout, "### parent module is ", parent_module, ", parent_class is ", parent_class, "\n", NIL);
+          p = NewHash();
+          Setattr(p, "nodeType", "class");
+          Setattr(p, "kind", "struct");
+          Setattr(p, "name", parent_class);
+          Setattr(p, "sym:name", parent_class);
+          Setattr(p, "namespace", parent_module);
+          Setattr(p, "classtype", parent_class);
+          pmn = NewStringf("%s_%s", parent_module, parent_class);
+          Setattr(p, "quickjs:mangledname", SwigType_manglestr(pmn));
+          // Printv(stdout, "### parent mangled name: ", pmn, "\n", NIL);
+          // Swig_print_node(p);
+          Append(baselist, p);
+          // Swig_print_node(n);
+          free(s);
+          Delete(pmn);
+        } else {
+          Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored)\n", NIL);
+        }
+      }
+      it = Next(it);
+    }
+    Delete(ilist);
+  }
+
   emitter->enterClass(n);
   Language::classHandler(n);
   emitter->exitClass(n);
