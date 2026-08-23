@@ -2596,6 +2596,159 @@ public:
   }
 
   /* ------------------------------------------------------------
+   * collectOutputTypes()
+   *
+   * Collect one type string for each value the wrapped function
+   * returns. Return NULL if no parameter has an argout typemap, in
+   * which case the caller uses the function's own return type.
+   * The annotation mode must not be NONE.
+   * ------------------------------------------------------------ */
+
+  List *collectOutputTypes(Node *n, type_annotation_t anno) {
+    assert(anno != TYPE_ANNOTATION_NONE);
+
+    ParmList *root = Getattr(n, "wrap:parms");
+    if (!root)
+      root = Getattr(n, "parms");
+
+    /* Only an argout typemap or an out typemap suppressing the function return value makes what
+       is returned differ from the function return type. */
+    Parm *p;
+    for (p = root; p; p = nextSibling(p)) {
+      if (Getattr(p, "tmap:argout:match_type"))
+        break;
+    }
+    if (!p && !checkAttribute(n, "tmap:out:numoutputs", "0"))
+      return NULL;
+
+    List *types = NewList();
+
+    if (anno == TYPE_ANNOTATION_C) {
+      /* C annotations use the argout parameter types and ignore the function return type. The
+         catchall feature supplies a PEP 484 type, which has no place in a C annotation, so it
+         neither provides the type nor suppresses the warning in this mode. */
+      emit_output_summary(n, root, true);
+      for (Iterator it = First(Getattr(n, "wrap:outputparms")); it.item; it = Next(it)) {
+        String *tm = SwigType_str(Getattr(it.item, "tmap:argout:match_type"), 0);
+        Append(types, tm);
+        Delete(tm);
+      }
+      return types;
+    }
+
+    /* The catchall feature supplies the type of the values returned by hand, leaving the
+       warning with nothing to report. */
+    bool warn_container_mismatch = !Getattr(n, "feature:python:annotations:catchall");
+
+    Swig_typemap_attach_parms("pytyping", root, 0);
+    emit_output_summary(n, root, warn_container_mismatch);
+
+    /* The function return value, when there is one, is the first of the returned values. */
+    if (GetFlag(n, "wrap:returnsurvives")) {
+      String *tm = lookupPytyping(n, true);
+      if (!tm)
+        tm = NewString("typing.Any");
+      Append(types, tm);
+      Delete(tm);
+    }
+
+    for (Iterator it = First(Getattr(n, "wrap:outputparms")); it.item; it = Next(it)) {
+      String *tm = lookupPytyping(it.item, true);
+      if (!tm) {
+        Swig_warning(WARN_PYTHON_TYPEMAP_PYTYPING_UNDEF,
+                     input_file,
+                     line_number,
+                     "Missing required entry in pytyping typemap for %s\n",
+                     SwigType_str(Getattr(it.item, "tmap:argout:match_type"), 0));
+        tm = NewString("typing.Any");
+      }
+      Append(types, tm);
+      Delete(tm);
+    }
+
+    return types;
+  }
+
+  /* ------------------------------------------------------------
+   * formatOutputTypes()
+   *
+   * Combine the types collected by collectOutputTypes() into a
+   * single annotation. Two or more values are returned in a list,
+   * matching the behaviour of SWIG_AppendOutput.
+   * ------------------------------------------------------------ */
+
+  String *formatOutputTypes(List *types, Node *n, type_annotation_t anno) {
+    int num_results = Len(types);
+
+    if (anno != TYPE_ANNOTATION_C)
+      return composeOutputType(n, types);
+
+    /* C annotations are all the argout parameter types concatenated with a comma. */
+    if (num_results == 0) {
+      /* An out typemap declaring numoutputs=0 leaves nothing at all to return, which is
+         described the way a void function is. Without one the function return value is
+         returned and the caller annotates its type. */
+      return checkAttribute(n, "tmap:out:numoutputs", "0") ? NewString("void") : NULL;
+    }
+
+    String *ret = NewStringEmpty();
+    for (int i = 0; i < num_results; i++) {
+      if (i > 0)
+        Printv(ret, ", ", NULL);
+      Printv(ret, Getitem(types, i), NULL);
+    }
+    return ret;
+  }
+
+  /* ------------------------------------------------------------
+   * composeOutputType()
+   *
+   * Compose the annotation describing everything the wrapped
+   * function returns. Two or more values are returned in the
+   * container the argout typemaps build, a list unless they say
+   * otherwise with the container attribute.
+   * ------------------------------------------------------------ */
+
+  String *composeOutputType(Node *n, List *types) {
+    int num_results = Len(types);
+    if (num_results == 0)
+      return NewString("None");
+
+    /* A single value is only in a container when an argout typemap builds one for it. */
+    if (num_results == 1 && !GetFlag(n, "wrap:outputcontainerbuilt"))
+      return Copy(Getitem(types, 0));
+
+    String *container = Getattr(n, "wrap:outputcontainer");
+    String *ret;
+    const char *close;
+
+    if (container && Equal(container, "tuple")) {
+      ret = NewString("typing.Tuple[");
+      close = "]";
+    } else if (container && !Equal(container, "list")) {
+      /* Either the argout typemaps disagree on the container, which emit_output_summary() reports as "unknown", or they agree
+         on one that has no typing equivalent. The type of the values returned cannot be worked out either way. */
+      String *catchall_type = Getattr(n, "feature:python:annotations:catchall");
+      return catchall_type ? Copy(catchall_type) : NewString("typing.Any");
+    } else if (num_results == 1) {
+      ret = NewString("typing.List[");
+      close = "]";
+    } else {
+      /* SWIG_Python_AppendOutput builds a list, which is heterogeneous in practice. */
+      ret = NewString("typing.List[typing.Union[");
+      close = "]]";
+    }
+
+    for (int i = 0; i < num_results; i++) {
+      if (i > 0)
+        Printv(ret, ", ", NULL);
+      Printv(ret, Getitem(types, i), NULL);
+    }
+    Printv(ret, close, NULL);
+    return ret;
+  }
+
+  /* ------------------------------------------------------------
    * argoutReturnTypeAnnotation()
    *
    * Get the return type annotation for functions with argout
@@ -2604,80 +2757,12 @@ public:
    * ------------------------------------------------------------ */
 
   String *argoutReturnTypeAnnotation(Node *n, type_annotation_t anno) {
-    assert(anno != TYPE_ANNOTATION_NONE);
+    List *types = collectOutputTypes(n, anno);
+    if (!types)
+      return NULL;
 
-    String *ret = NULL;
-    String *tm;
-
-    ParmList *p = Getattr(n, "wrap:parms");
-    if (!p)
-      p = Getattr(n, "parms");
-    ParmList *root = p;
-
-    while (p) {
-      if ((tm = Getattr(p, "tmap:argout:match_type"))) {
-        if (anno == TYPE_ANNOTATION_TYPING)
-          break;
-
-        tm = SwigType_str(tm, 0);
-        if (ret) {
-          Printv(ret, ", ", tm, NULL);
-          Delete(tm);
-        } else {
-          ret = tm;
-        }
-
-        p = Getattr(p, "tmap:argout:next");
-      } else {
-        p = nextSibling(p);
-      }
-    }
-    if (!p)
-      return ret;
-
-    assert(anno == TYPE_ANNOTATION_TYPING);
-
-    ParmList *copied_parms = CopyParmList(root);
-    Swig_typemap_attach_parms("pytyping", copied_parms, 0);
-
-    size_t num_results = 0;
-    if (!Equal(Getattr(n, "type"), "void")) {
-      ret = lookupPytyping(n, true);
-      num_results = 1;
-    }
-
-    for (p = copied_parms; p; p = nextSibling(p)) {
-      if (Getattr(p, "tmap:argout:match_type")) {
-        tm = lookupPytyping(p, true);
-        if (!tm) {
-          Swig_warning(WARN_PYTHON_TYPEMAP_PYTYPING_UNDEF,
-                       input_file,
-                       line_number,
-                       "Missing required entry in pytyping typemap for %s\n",
-                       SwigType_str(Getattr(p, "tmap:argout:match_type"), 0));
-          tm = NewString("typing.Any");
-        }
-
-        if (ret) {
-          if (num_results == 1) {
-            String *combined = NewStringf("typing.List[typing.Union[%s, %s", ret, tm);
-            Delete(ret);
-            ret = combined;
-          } else {
-            Printv(ret, ", ", tm, NULL);
-          }
-          Delete(tm);
-        } else {
-          ret = tm;
-        }
-        num_results++;
-      }
-    }
-
-    if (num_results > 1)
-      Printv(ret, "]]", NULL);
-
-    Delete(copied_parms);
+    String *ret = formatOutputTypes(types, n, anno);
+    Delete(types);
     return ret;
   }
 
@@ -3812,6 +3897,12 @@ public:
     }
     emit_return_variable(n, returntype, f);
 
+    /* An out typemap declaring numoutputs=0 for a non void return does not return the function return
+       value and so need not set $result at all. Provide the None that is returned when no argout
+       typemap appends anything. A void return always has an out typemap that sets $result. */
+    if (checkAttribute(n, "tmap:out:numoutputs", "0") && Cmp(returntype, "void") != 0)
+      Append(f->code, "if (!resultobj) resultobj = SWIG_Py_Void();\n");
+
     /* Output argument output code */
     Printv(f->code, outarg, NIL);
 
@@ -3876,7 +3967,7 @@ public:
     Replaceall(f->code, "$cleanup", cleanup);
 
     bool isvoid = !Cmp(returntype, "void");
-    Replaceall(f->code, "$isvoid", isvoid ? "1" : "0");
+    emit_isvoid_special_variables(n, f->code, isvoid);
 
     /* Substitute the function name */
     Replaceall(f->code, "$symname", iname);
@@ -5694,7 +5785,8 @@ public:
                 Printv(pass_self, tab8, tab4, "_self = None\n", tab8, "else:\n", tab8, tab4, "_self = self\n", NIL);
               }
 
-              Printv(f_shadow, "\n", tab4, "def __init__(", parms, ")", returnTypeAnnotation(n), ":\n", NIL);
+              /* __init__ always returns None in Python, so it never carries a return annotation. */
+              Printv(f_shadow, "\n", tab4, "def __init__(", parms, "):\n", NIL);
               if (Node *node_with_doc = find_overload_with_docstring(n))
                 Printv(f_shadow, tab8, docstring(node_with_doc, AUTODOC_CTOR, tab8), "\n", NIL);
               if (have_pythonprepend(n))
@@ -5743,7 +5835,8 @@ public:
 
       if (pyi_stub && add_init) {
         String *parms = make_pyParmList(n, true, false, allow_kwargs, false, true);
-        Printv(f_stub, "\n", tab4, "def __init__(", parms, ")", returnTypeAnnotationForStubFile(n), ":\n", NIL);
+        /* __init__ always returns None in Python, so it never carries a return annotation. */
+        Printv(f_stub, "\n", tab4, "def __init__(", parms, "):\n", NIL);
         if (Node *node_with_doc = find_overload_with_docstring(n))
           Printv(f_stub, tab8, docstring(node_with_doc, AUTODOC_CTOR, tab8), "\n", NIL);
         Printv(f_stub, tab8, "...\n", NIL);
@@ -6627,7 +6720,7 @@ int PYTHON::classDirectorMethod(Node *n, Node *parent, String *super) {
 
   /* emit the director method */
   if (status == SWIG_OK) {
-    Replaceall(w->code, "$isvoid", is_void ? "1" : "0");
+    emit_isvoid_special_variables(0, w->code, is_void);
     if (!Getattr(n, "defaultargs")) {
       Replaceall(w->code, "$symname", symname);
       Wrapper_print(w, f_directors);

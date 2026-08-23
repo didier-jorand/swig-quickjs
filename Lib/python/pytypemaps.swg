@@ -45,7 +45,7 @@
 /* Overload of the output/constant/exception/dirout handling */
 
 /* append output */
-#define SWIG_AppendOutput(result, obj)  SWIG_Python_AppendOutput(result, obj, $isvoid)
+#define SWIG_AppendOutput(result, obj)  SWIG_Python_AppendOutput(result, obj, $isvoidresult)
 
 /* set constant */
 #if defined(SWIGPYTHON_BUILTIN)
@@ -68,6 +68,17 @@
 /* Include the Unified Typemap Library */
 %include <typemaps/swigtypemaps.swg>
 
+#ifndef SWIG_INOUT_NODEF
+/* Add INOUT/INPUT/OUTPUT support for the pytyping typemap */
+%define %_pytyping_inout_define(Code, Type)
+  %typemap(pytyping)
+    Type *OUTPUT, Type &OUTPUT,
+    Type *INPUT, Type &INPUT,
+    Type *INOUT, Type &INOUT
+  "$typemap(pytyping, Type)"
+%enddef
+%apply_checkctypes(%_pytyping_inout_define)
+#endif
 
 /*  ------------------------------------------------------------
  *  Python extra typemaps / typemap overrides
