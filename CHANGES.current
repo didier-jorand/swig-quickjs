@@ -7,6 +7,64 @@ the issue number to the end of the URL: https://github.com/swig/swig/issues/
 Version 4.6.0 (in progress)
 ===========================
 
+2026-08-24: wsfulton
+            [Python] #3537 Fix "'SWIGPY_SLICEOBJECT' was not declared in this scope" when
+            compiling the wrappers for a module that %imports another module which has
+            already included the STL containers, and then instantiates a container of its
+            own:
+
+              %module b
+              %import "a.i"             // a.i already has %include <std_vector.i>
+              %include <std_vector.i>
+              %template(DoubleVector) std::vector<double>;
+
+            The second %include is a no-op, as std_vector.i was read while processing the
+            %import, so the definition of SWIGPY_SLICEOBJECT was emitted into the wrapper
+            for 'a' only, while the slice methods generated for 'b' went on using it. The
+            definition is now a fragment and so is emitted into each wrapper that needs it.
+
+2026-08-23: wsfulton
+            [Python] #3518 The pytyping typemaps added for the INPUT, INOUT and OUTPUT
+            typemaps in typemaps.i are no longer all the same, as the typemaps do not all
+            accept or return None. The pointer forms of INPUT and INOUT accept a null
+            pointer, which is None, so they are now annotated with typing.Optional:
+
+              %apply int *INPUT { int *value };
+              void take_value(int *value);
+
+            is now annotated:
+
+              def take_value(value: "typing.Optional[int]") -> "None":
+
+            INOUT returns what it was given, so its return type is annotated with
+            typing.Optional as well:
+
+              %apply int *INOUT { int *io };
+              void modify_value(int *io);
+
+            is now annotated:
+
+              def modify_value(io: "typing.Optional[int]") -> "typing.Optional[int]":
+
+            The reference forms, such as int &INPUT, are unchanged, as they reject a null
+            pointer.
+
+2026-08-23: wsfulton
+            [JavaScript, Octave, Perl, Python, R, Ruby, Scilab, Tcl]
+            Fix a crash when a null pointer is passed to a parameter using the INPUT or
+            INOUT typemaps in typemaps.i for a reference, such as int &INPUT. A reference
+            cannot be bound to a null pointer, but one was accepted and then dereferenced
+            when making the call. It is now rejected with a null reference error, the same
+            as for a plain SWIGTYPE & parameter and for the INPUT typemaps covering types
+            such as std::string. For example:
+
+              %apply int &INPUT { int &value };
+              int get(int &value);
+
+            passing the target language's null value, such as None in Python, to get now
+            raises an error instead of crashing. The pointer typemaps, such as int *INPUT,
+            are unchanged and continue to accept a null pointer.
+
 2026-08-22: Nerixyz
             [Python] #2165 #3518 The INPUT, INOUT and OUTPUT typemaps in typemaps.i now
             carry pytyping typemaps, so a parameter using them is annotated with the type

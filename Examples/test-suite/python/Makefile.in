@@ -11,7 +11,7 @@ PY_VER_3_DIGIT    = @PY_VER_3_DIGIT@
 PYCODESTYLE       = @PYCODESTYLE@
 PYCODESTYLE_FLAGS = --ignore=E252,E30,E402,E501,E731,E741,W291,W391
 PYREFLY           = @PYREFLY@
-PYREFLY_FLAGS     = --summary=none --python-interpreter-path=$(PYTHON) --search-path=. --ignore=missing-import
+PYREFLY_FLAGS     = --summary=none --python-interpreter-path=$(PYTHON) --search-path=. --ignore=missing-import --error=bad-function-definition
 
 HAVE_CXX11   = @HAVE_CXX11@
 HAVE_CXX14   = @HAVE_CXX14@
@@ -229,7 +229,7 @@ clean:
 	rm -f python_crossmod_a.py* python_crossmod_b.py*
 	rm -f python_annotations_import_a.py* python_annotations_import_b.py*
 	rm -f import_share_a.py* import_share_b.py* import_share_c.py*
-	rm -f import_stl_a.py* import_stl_b.py*
+	rm -f import_stl_a.py* import_stl_b.py* import_stl_c.py*
 	rm -f imports_a.py* imports_b.py* mod_a.py* mod_b.py*
 	rm -f multi_import_a.py* multi_import_b.py* multi_import_d.py*
 	rm -f packageoption_a.py* packageoption_b.py* packageoption_c.py*
