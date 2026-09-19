@@ -819,15 +819,15 @@ endif
 # These targets are used by the test-suite:
 
 javascript: $(SRCDIR_SRCS) javascript_custom_interpreter
-ifeq (v8, $(JSENGINE))
+ifeq (v8, $(ENGINE))
 	$(SWIG) -javascript $(SWIGOPT) -o $(ICXXSRCS) $(INTERFACEPATH)
 else
 	$(SWIG) -javascript $(SWIGOPT) $(INTERFACEPATH)
 endif
-ifeq (jsc, $(JSENGINE))
+ifeq (jsc, $(ENGINE))
 	$(CC) -c $(CCSHARED) $(CPPFLAGS) $(CFLAGS) $(ISRCS) $(SRCDIR_SRCS) $(INCLUDES) $(JSINCLUDES)
 	$(LDSHARED) $(CFLAGS) $(LDFLAGS) $(OBJS) $(IOBJS) $(JSDYNAMICLINKING) $(LIBS) -o $(LIBPREFIX)$(TARGET)$(SO)
-else ifeq (quickjs, $(JSENGINE))
+else ifeq (quickjs, $(ENGINE))
 	$(CC) -c $(CCSHARED) $(CPPFLAGS) $(CFLAGS) $(ISRCS) $(SRCDIR_SRCS) $(INCLUDES) $(JSINCLUDES)
 	$(LDSHARED) $(CFLAGS) $(LDFLAGS) $(OBJS) $(IOBJS) $(JSDYNAMICLINKING) $(LIBS) -o $(LIBPREFIX)$(TARGET)$(SO)
 else ifeq (v8, $(ENGINE)) # v8 must be compiled as c++
