@@ -19,6 +19,8 @@ HAVE_CXX11   = @HAVE_CXX11@
 HAVE_CXX14   = @HAVE_CXX14@
 HAVE_CXX17   = @HAVE_CXX17@
 HAVE_CXX20   = @HAVE_CXX20@
+HAVE_CXX23   = @HAVE_CXX23@
+HAVE_CXX26   = @HAVE_CXX26@
 srcdir         = @srcdir@
 top_srcdir     = @top_srcdir@
 top_builddir   = @top_builddir@
@@ -27,10 +29,10 @@ BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
 
 CPP_TEST_CASES = \
 	go_inout \
-	go_director_inout
+	go_director_inout \
 
 MULTI_CPP_TEST_CASES = \
-	go_subdir_import
+	go_subdir_import \
 
 include $(srcdir)/../common.mk
 
@@ -186,6 +188,7 @@ clean:
 	rm -f import_share_c.go import_share_c.gox
 	rm -f import_stl_a.go import_stl_a.gox
 	rm -f import_stl_b.go import_stl_b.gox
+	rm -f import_stl_c.go import_stl_c.gox
 	rm -f imports_a.go imports_a.gox imports_b.go imports_b.gox
 	rm -f mod_a.go mod_a.gox mod_b.go mod_b.gox
 	rm -f multi_import_a.go multi_import_a.gox

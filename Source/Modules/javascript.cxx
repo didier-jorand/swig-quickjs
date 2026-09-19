@@ -1022,7 +1022,7 @@ int JSEmitter::emitCtor(Node *n) {
   emitCleanupCode(n, wrapper, params);
 
   bool isvoid = !Cmp(returntype, "void");
-  Replaceall(wrapper->code, "$isvoid", isvoid ? "1" : "0");
+  emit_isvoid_special_variables(n, wrapper->code, isvoid);
 
   Replaceall(wrapper->code, "$symname", iname);
 
@@ -1348,7 +1348,7 @@ int JSEmitter::emitFunction(Node *n, bool is_member, bool is_static) {
   emitCleanupCode(n, wrapper, params);
 
   bool isvoid = !Cmp(returntype, "void");
-  Replaceall(wrapper->code, "$isvoid", isvoid ? "1" : "0");
+  emit_isvoid_special_variables(n, wrapper->code, isvoid);
 
   Replaceall(wrapper->code, "$symname", iname);
 
@@ -2391,7 +2391,7 @@ void V8Emitter::marshalInputArgs(Node *n, ParmList *parms, Wrapper *wrapper, Mar
     switch (mode) {
     case Getter:
       if (is_member && !is_static && i == 0) {
-        Printv(arg, "info.Holder()", 0);
+        Printv(arg, "SWIGV8_INFO_HOLDER(info)", 0);
         i++;
       } else {
         Printf(arg, "args[%d]", i - startIdx);
@@ -2401,7 +2401,7 @@ void V8Emitter::marshalInputArgs(Node *n, ParmList *parms, Wrapper *wrapper, Mar
       break;
     case Function:
       if (is_member && !is_static && i == 0) {
-        Printv(arg, "args.Holder()", 0);
+        Printv(arg, "SWIGV8_ARGS_THIS(args)", 0);
         i++;
       } else {
         Printf(arg, "args[%d]", i - startIdx);
@@ -2411,7 +2411,7 @@ void V8Emitter::marshalInputArgs(Node *n, ParmList *parms, Wrapper *wrapper, Mar
       break;
     case Setter:
       if (is_member && !is_static && i == 0) {
-        Printv(arg, "info.Holder()", 0);
+        Printv(arg, "SWIGV8_INFO_HOLDER(info)", 0);
         i++;
       } else {
         Printv(arg, "value", 0);

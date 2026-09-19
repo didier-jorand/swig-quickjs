@@ -1665,7 +1665,7 @@ public:
     Replaceall(f->code, "$cleanup", cleanup);
 
     bool isvoid = !Cmp(returntype, "void");
-    Replaceall(f->code, "$isvoid", isvoid ? "1" : "0");
+    emit_isvoid_special_variables(n, f->code, isvoid);
 
     Replaceall(f->code, "$symname", iname);
 
@@ -2488,7 +2488,7 @@ public:
         if (tm != 0) {
           Replaceall(tm, "$input", Swig_cresult_name());
           char temp[24];
-          sprintf(temp, "%d", idx);
+          snprintf(temp, sizeof(temp), "%d", idx);
           Replaceall(tm, "$argnum", temp);
 
           /* TODO check this */
@@ -2561,7 +2561,7 @@ public:
 
     /* emit the director method */
     if (status == SWIG_OK) {
-      Replaceall(w->code, "$isvoid", is_void ? "1" : "0");
+      emit_isvoid_special_variables(0, w->code, is_void);
       if (!Getattr(n, "defaultargs")) {
         Replaceall(w->code, "$symname", symname);
         Wrapper_print(w, f_directors);

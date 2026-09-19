@@ -1812,7 +1812,7 @@ private:
     }
 
     bool isvoid = !Cmp(returntype, "void");
-    Replaceall(f->code, "$isvoid", isvoid ? "1" : "0");
+    emit_isvoid_special_variables(n, f->code, isvoid);
 
     Replaceall(f->code, "$symname", Getattr(n, "sym:name"));
   }
@@ -4047,7 +4047,7 @@ private:
 
       Printv(w->code, "}", NULL);
 
-      Replaceall(w->code, "$isvoid", is_void ? "1" : "0");
+      emit_isvoid_special_variables(0, w->code, is_void);
       Replaceall(w->code, "$symname", symname);
       Wrapper_print(w, f_c_directors);
     }
@@ -5611,8 +5611,14 @@ private:
 
     SwigType *type = Getattr(n, "enumtype");
     assert(type);
-    char *p = Char(type);
-    int len = Len(type);
+
+    String *symname = Getattr(n, "sym:name");
+    String *scope = Swig_scopename_prefix(type);
+    SwigType *symtype = scope ? NewStringf("%s::%s", scope, symname) : Copy(symname);
+    Delete(scope);
+
+    char *p = Char(symtype);
+    int len = Len(symtype);
     SwigType *s = NewString("");
     bool capitalize = true;
     for (int i = 0; i < len; ++i, ++p) {
@@ -5631,6 +5637,7 @@ private:
 
     ret = Swig_name_mangle_type(s);
     Delete(s);
+    Delete(symtype);
     return ret;
   }
 

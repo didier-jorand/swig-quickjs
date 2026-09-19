@@ -2010,7 +2010,7 @@ public:
     Replaceall(f->code, "$cleanup", cleanup);
 
     bool isvoid = !Cmp(returntype, "void");
-    Replaceall(f->code, "$isvoid", isvoid ? "1" : "0");
+    emit_isvoid_special_variables(n, f->code, isvoid);
 
     /* Substitute the function name */
     Replaceall(f->code, "$symname", symname);
@@ -3208,7 +3208,7 @@ public:
 
         Putc(',', arglist);
         if ((tm = Getattr(p, "tmap:directorin")) != 0) {
-          sprintf(source, "obj%d", idx++);
+          snprintf(source, sizeof(source), "obj%d", idx++);
           String *input = NewString(source);
           Setattr(p, "emit:directorinput", input);
           Replaceall(tm, "$input", input);
@@ -3233,7 +3233,7 @@ public:
           if (SwigType_ispointer(parameterType) || SwigType_isreference(parameterType)) {
             Node *modname = Getattr(parent, "module");
             Node *target = Swig_directormap(modname, parameterType);
-            sprintf(source, "obj%d", idx++);
+            snprintf(source, sizeof(source), "obj%d", idx++);
             String *nonconst = 0;
             /* strip pointer/reference --- should move to Swig/stype.c */
             String *nptype = NewString(Char(parameterType) + 2);
@@ -3412,7 +3412,7 @@ public:
 
     /* emit the director method */
     if (status == SWIG_OK) {
-      Replaceall(w->code, "$isvoid", is_void ? "1" : "0");
+      emit_isvoid_special_variables(0, w->code, is_void);
       if (!Getattr(n, "defaultargs")) {
         Replaceall(w->code, "$symname", symname);
         Wrapper_print(w, f_directors);

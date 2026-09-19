@@ -680,9 +680,9 @@ public:
 
       // Produce names of source and target
       if (args_passed_as_array)
-        sprintf(source, "argv[%d]", i);
+        snprintf(source, sizeof(source), "argv[%d]", i);
       else
-        sprintf(source, "s_%d", i);
+        snprintf(source, sizeof(source), "s_%d", i);
 
       if (!args_passed_as_array) {
         if (i != 0)
@@ -865,7 +865,7 @@ public:
     Printv(f->code, "return gswig_result;\n", NIL);
 
     bool isvoid = !Cmp(returntype, "void");
-    Replaceall(f->code, "$isvoid", isvoid ? "1" : "0");
+    emit_isvoid_special_variables(n, f->code, isvoid);
 
     /* Substitute the function name */
     Replaceall(f->code, "$symname", iname);

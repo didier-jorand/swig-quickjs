@@ -55,27 +55,33 @@ for i = 0,9 do
 end
 assert(ismap:size() == 10, "ismap:size()")
 for i = 0,9 do
-    assert(ismap:get(i).num == i * 10.1, "ismap:get(i)")
+    assert(cmp_flt(ismap:get(i).num , i * 10.1), "ismap:get(" .. i .. ")")
 end
 
 -- Test a map of pointers
+-- The map only stores the raw pointers, so the Struct objects must be kept
+-- referenced from Lua, otherwise they are collected and the map dangles
 local ispmap = v.IntStructPtrMap()
+local ispmap_values = {}
 for i = 0,9 do
-    ispmap:set(i, v.Struct(i * 10.1))
+    ispmap_values[i] = v.Struct(i * 10.1)
+    ispmap:set(i, ispmap_values[i])
 end
 assert(ispmap:size() == 10, "ispmap:size()")
 for i = 0,9 do
-    assert(ispmap:get(i).num == i * 10.1, "ispmap:get(i)")
+    assert(cmp_flt(ispmap:get(i).num, i * 10.1), "ispmap:get(" .. i .. ")")
 end
 
 -- Test a map of constant pointers
 local iscpmap = v.IntStructConstPtrMap()
+local iscpmap_values = {}
 for i = 0,9 do
-    iscpmap:set(i, v.Struct(i * 10.1))
+    iscpmap_values[i] = v.Struct(i * 10.1)
+    iscpmap:set(i, iscpmap_values[i])
 end
 assert(iscpmap:size() == 10, "iscpmap:size()")
 for i = 0,9 do
-    assert(iscpmap:get(i).num == i * 10.1, "iscpmap:get(i)")
+    assert(cmp_flt(iscpmap:get(i).num, i * 10.1), "iscpmap:get(" .. i .. ")")
 end
 
 -- Test complex type as key (Struct)
