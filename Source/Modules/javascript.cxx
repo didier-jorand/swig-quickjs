@@ -503,38 +503,7 @@ int JAVASCRIPT::classHandler(Node *n) {
         // Printv(stdout, Getattr(n,"sym:name"), "\tbase class (added): ", Getattr(p, "sym:name"), "(",  Getattr(p, "quickjs:mangledname"), ")\n", NIL);
         // Printv(stdout, "\t\t", Getattr(n,"classtype"), "\t ", Getattr(p, "classtype"), "\n", NIL);
       } else {
-        // XXX in progress: assume cross-module inheritance (if basename like '{module}:{class}' */
-        if (p) {
-          Printv(
-            stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' ", Getattr(p, "kind"), " (used before declaration?)\n", NIL);
-          // Swig_print_node(p);
-        }
-
-        if (Strchr(it.item, ':')) {
-          // Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (from another module)\n", NIL);
-          String *pmn;
-          char *s = Char(Data(it.item));
-          char *parent_module, *parent_class;
-          parent_module = strtok(s, ":");
-          parent_class = strtok(NULL, ":");
-          // Printv(stdout, "### parent module is ", parent_module, ", parent_class is ", parent_class, "\n", NIL);
-          p = NewHash();
-          Setattr(p, "nodeType", "class");
-          Setattr(p, "kind", "struct");
-          Setattr(p, "name", parent_class);
-          Setattr(p, "sym:name", parent_class);
-          Setattr(p, "namespace", parent_module);
-          Setattr(p, "classtype", parent_class);
-          pmn = NewStringf("%s_%s", parent_module, parent_class);
-          Setattr(p, "quickjs:mangledname", SwigType_manglestr(pmn));
-          // Printv(stdout, "### parent mangled name: ", pmn, "\n", NIL);
-          // Swig_print_node(p);
-          Append(baselist, p);
-          // Swig_print_node(n);
-          Delete(pmn);
-        } else {
-          Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored)\n", NIL);
-        }
+        Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored): missing %import?\n", NIL);
       }
       it = Next(it);
     }
