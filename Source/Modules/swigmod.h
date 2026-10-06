@@ -183,6 +183,7 @@ public:
   /* Miscellaneous */
 
   virtual int typedefHandler(Node *n);
+  virtual int cbasesHandler(Node *n);
 
   /* Low-level code generation */
 

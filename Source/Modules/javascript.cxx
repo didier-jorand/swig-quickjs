@@ -473,42 +473,8 @@ int JAVASCRIPT::nativeWrapper(Node *n) {
 int JAVASCRIPT::classHandler(Node *n) {
   emitter->switchNamespace(n);
 
-  // Implements "GObject" inheritance, allowing a C struct to behave like if it inherits (C++ like) from
-  // another C structure. This is (for now) implemented as a feature "cbases" which list the list of
-  // parent structure names. This parent name can be directly the structure name or the reference to a
-  // structure defined in another module: {module}:{struct name}
-  // Example:
-  // feature("cbases", "modA:structA,B")
-  // typedef struct { ... } C;
-  // struct C will inherit from structA and from B
-  // In the original sources, it would look like
-  // struct C { structA _a; B _b; ... }
-  Node *p;
-  List *baselist;
-
-  if (Getattr(n, "feature:cbases")) {
-    List *ilist = Split(Getattr(n, "feature:cbases"), ',', -1);
-    Iterator it = First(ilist);
-    baselist = Getattr(n, "bases");
-    if (!baselist) {
-      baselist = NewList();
-      Setattr(n, "bases", baselist);
-    }
-    while (it.item) {
-      p = classLookup(it.item);
-      if (p && Getattr(p, "classtype")) {
-        // The cbase is a known type, record it in the class baselist and as a candidate for type cast.
-        Append(baselist, p);
-        SwigType_inherit(Getattr(n, "classtype"), Getattr(p, "classtype"), 0, 0);
-        // Printv(stdout, Getattr(n,"sym:name"), "\tbase class (added): ", Getattr(p, "sym:name"), "(",  Getattr(p, "quickjs:mangledname"), ")\n", NIL);
-        // Printv(stdout, "\t\t", Getattr(n,"classtype"), "\t ", Getattr(p, "classtype"), "\n", NIL);
-      } else {
-        Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored): missing %import?\n", NIL);
-      }
-      it = Next(it);
-    }
-    Delete(ilist);
-  }
+  // Handle feature 'cbases' ("C inheritance")
+  cbasesHandler(n);
 
   emitter->enterClass(n);
   Language::classHandler(n);

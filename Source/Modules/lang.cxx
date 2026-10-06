@@ -2449,6 +2449,63 @@ int Language::classDeclaration(Node *n) {
 }
 
 /* ----------------------------------------------------------------------
+ * Language::cbasesHandler()
+ * ---------------------------------------------------------------------- */
+
+int Language::cbasesHandler(Node *n) {
+  // Implements "GObject" inheritance, allowing a C struct to behave like if it inherits (C++ like) from
+  // another C structure. This is (for now) implemented as a feature "cbases" which list the list of
+  // parent structure names. There is no real multiple inheritance, it is assumed
+  // that 1st base is an "actual" structure (ie can have data) and the other are "interfaces"
+  // (ie only add methods).
+  // Example:
+  // feature("cbases", "struct A,B")
+  // typedef struct { ... } C;
+  // struct C will inherit from struct A and from B
+  // In the original sources, it would look like
+  // struct C { struct A _a; ... }
+  if (Getattr(n, "feature:cbases")) {
+    Node *p;
+    List *baselist;
+    List *ilist = Split(Getattr(n, "feature:cbases"), ',', -1);
+    Iterator it = First(ilist);
+    baselist = Getattr(n, "bases");
+    if (!baselist) {
+      baselist = NewList();
+      Setattr(n, "bases", baselist);
+    }
+    while (it.item) {
+      p = classLookup(it.item);
+      if (p && Getattr(p, "classtype")) {
+        // The cbase is a known type, record it in the class baselist and as a candidate for type cast.
+        Append(baselist, p);
+        SwigType_inherit(Getattr(n, "classtype"), Getattr(p, "classtype"), 0, 0);
+        // Ensure this base type will be remembered
+        SwigType *bty = Getattr(p, "classtype");
+        if (!SwigType_ispointer(bty)) {
+          SwigType *pname = Copy(bty);
+          SwigType_add_pointer(pname);
+          SwigType_remember(pname);
+          Delete(pname);
+        }
+        // Printv(stdout, Getattr(n,"sym:name"), "\tbase class (added): ", Getattr(p, "sym:name"), "\n", NIL);
+        // Printv(stdout, "\t\t", Getattr(n,"classtype"), "\t ", Getattr(p, "classtype"), "\n", NIL);
+
+        // Recurse to parent's parent
+        cbasesHandler(p);
+
+      } else {
+        Printv(stdout, "Warning: '", Getattr(n, "sym:name"), "' base class not found: '", it.item, "' (ignored): missing %import?\n", NIL);
+      }
+      it = Next(it);
+    }
+    Delete(ilist);
+  }
+
+  return SWIG_OK;
+}
+
+/* ----------------------------------------------------------------------
  * Language::classHandler()
  * ---------------------------------------------------------------------- */
 
