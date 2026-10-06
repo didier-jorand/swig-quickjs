@@ -764,13 +764,13 @@ int JSEmitter::emitWrapperFunction(Node *n) {
   int ret = SWIG_OK;
 
   String *kind = Getattr(n, "kind");
+  String *view = Getattr(n, "view");
 
   if (kind) {
 
     if (Equal(kind, "function")
-        // HACK: sneaky.ctest revealed that typedef'd (global) functions must be
-        // detected via the 'view' attribute.
-        || (Equal(kind, "variable") && Equal(Getattr(n, "view"), "globalfunctionHandler"))) {
+        // HACK: functions declared through a function typedef (see sneaky.ctest) keep kind 'variable', so detect them via 'view'
+        || (Equal(kind, "variable") && (Equal(view, "globalfunctionHandler") || Equal(view, "memberfunctionHandler")))) {
       bool is_member = GetFlag(n, "ismember") != 0 || GetFlag(n, "feature:extend") != 0;
       bool is_static = GetFlag(state.function(), IS_STATIC) != 0;
       ret = emitFunction(n, is_member, is_static);
@@ -795,8 +795,6 @@ int JSEmitter::emitWrapperFunction(Node *n) {
       ret = SWIG_ERROR;
     }
   } else {
-    String *view = Getattr(n, "view");
-
     if (Cmp(view, "constructorHandler") == 0) {
       ret = emitCtor(n);
     } else if (Cmp(view, "destructorHandler") == 0) {
@@ -3451,6 +3449,7 @@ int QuickJSEmitter::exitClass(Node *n) {
 
   Template t_class_tables(getTemplate("quickjs_class_tables"));
   t_class_tables.replace("$jsmangledname", state.clazz(NAME_MANGLED))
+<<<<<<< HEAD
     .replace("$jsclassconstants", state.clazz(CONSTANTS))
     .replace("$jsclassvariables", state.clazz(MEMBER_VARIABLES))
     .replace("$jsclassfunctions", state.clazz(MEMBER_FUNCTIONS))
@@ -3460,6 +3459,17 @@ int QuickJSEmitter::exitClass(Node *n) {
     .replace("$jsctor", state.clazz(CTOR))
     .replace("$jsdtor", state.clazz(DTOR))
     .pretty_print(f_wrappers);
+=======
+      .replace("$jsclassconstants", state.clazz(CONSTANTS))
+      .replace("$jsclassvariables", state.clazz(MEMBER_VARIABLES))
+      .replace("$jsclassfunctions", state.clazz(MEMBER_FUNCTIONS))
+      .replace("$jsstaticclassfunctions", state.clazz(STATIC_FUNCTIONS))
+      .replace("$jsstaticclassvariables", state.clazz(STATIC_VARIABLES))
+      .replace("$jsclassbases", jsclass_inheritance)
+      .replace("$jsctor", state.clazz(CTOR))
+      .replace("$jsdtor", state.clazz(DTOR))
+      .pretty_print(f_wrappers);
+>>>>>>> master
   Delete(jsclass_inheritance);
 
   /* Note: this makes sure that there is a swig_type added for this class */
