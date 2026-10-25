@@ -73,6 +73,7 @@
   rvrdeleter.reset($1);
 }
 %typemap(freearg) SWIGTYPE && ""
+%typemap(in) SWIGTYPE (&&)[ANY], SWIGTYPE (&&)[] = SWIGTYPE &;
 
 /* By value */
 #if defined(__cplusplus) && defined(%implicitconv_flag)
@@ -166,24 +167,17 @@
 }
 
 /* memberin/globalin/varin, for a reference to a fix array.  These also match a reference to an array of arrays, such
-   as an int (&)[2][3], so all $1_size elements are copied rather than the $1_dim0 of the first dimension. */
+   as an int (&)[2][3], so all $1_size elements are copied rather than the $1_dim0 of the first dimension. memberin and
+   globalin do not check for NULL, which the in typemap for a reference rejects. */
 
 %typemap(memberin) SWIGTYPE (&)[ANY], SWIGTYPE (&&)[ANY] {
-  if ($input) {
-    size_t ii = 0;
-    for (; ii < (size_t)$1_size; ++ii) *(($1_basetype *)$1 + ii) = *(($1_basetype *)$input + ii);
-  } else {
-    %variable_nullref("$type","$name");
-  }
+  size_t ii = 0;
+  for (; ii < (size_t)$1_size; ++ii) *(($1_basetype *)$1 + ii) = *(($1_basetype *)$input + ii);
 }
 
 %typemap(globalin) SWIGTYPE (&)[ANY], SWIGTYPE (&&)[ANY] {
-  if ($input) {
-    size_t ii = 0;
-    for (; ii < (size_t)$1_size; ++ii) *(($1_basetype *)$1 + ii) = *(($1_basetype *)$input + ii);
-  } else {
-    %variable_nullref("$type","$name");
-  }
+  size_t ii = 0;
+  for (; ii < (size_t)$1_size; ++ii) *(($1_basetype *)$1 + ii) = *(($1_basetype *)$input + ii);
 }
 
 %typemap(varin) SWIGTYPE (&)[ANY], SWIGTYPE (&&)[ANY] {
@@ -253,7 +247,7 @@
   $1 = %reinterpret_cast(argp, $ltype);
 }
 
-%typemap(varin,noblock=1,warning="462:Unable to set dimensionless array variable") SWIGTYPE []
+%typemap(varin,noblock=1,warning=SWIGWARN_TYPEMAP_VARIN_UNDEF_MSG) SWIGTYPE [], SWIGTYPE (&)[], SWIGTYPE (&&)[]
 {
   %variable_fail(SWIG_AttributeError, "$type", "read-only $name");
 }
@@ -556,10 +550,6 @@
 
 %typemap(throws,noblock=1) SWIGTYPE && {
   %raise(SWIG_NewPointerObj(%as_voidptr(&$1),$descriptor,0), "$type", $descriptor);
-}
-
-%typemap(throws,noblock=1) (...) {
-  SWIG_exception_fail(SWIG_RuntimeError,"unknown exception");
 }
 
 /* ------------------------------------------------------------

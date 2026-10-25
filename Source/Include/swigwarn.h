@@ -56,6 +56,7 @@
 /* Unused since 4.2.0: #define WARN_DEPRECATED_INPUT_FILE    125 */
 /* Unused since 4.3.0: #define WARN_DEPRECATED_NESTED_WORKAROUND 126 */
 #define WARN_DEPRECATED_TYPEDEF                      127
+#define WARN_DEPRECATED_TYPEMAP_PASS                 128
 
 /* -- Preprocessor -- */
 
@@ -283,6 +284,7 @@
 
 #define WARN_C_TYPEMAP_CTYPE_UNDEF                   760
 #define WARN_C_UNSUPPORTTED                          761
+#define WARN_C_CANTHROW_MISSING                      762
 
 /* please leave 760-779 free for C */
 

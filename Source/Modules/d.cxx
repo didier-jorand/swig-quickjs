@@ -1080,7 +1080,7 @@ public:
    * D::staticmembervariableHandler()
    * --------------------------------------------------------------------------- */
   virtual int staticmembervariableHandler(Node *n) {
-    if (GetFlag(n, "feature:d:manifestconst") != 1) {
+    if (!isManifestConstant(n)) {
       Delattr(n, "value");
     }
 
@@ -1438,7 +1438,7 @@ public:
 
     // The %dmanifestconst feature determines if a D manifest constant
     // (const/enum) or a getter function is created.
-    if (GetFlag(n, "feature:d:manifestconst") != 1) {
+    if (!isManifestConstant(n)) {
       // Default constant handling will work with any type of C constant. It
       // generates a getter function (which is the same as a read only property
       // in D) which retrieves the value via by calling the C wrapper.
@@ -1494,7 +1494,14 @@ public:
       Printf(constants_code, "%s;\n", override_value);
     } else {
       // Just take the value from the C definition and hope it compiles in D.
-      if (Getattr(n, "wrappedasconstant")) {
+      String *stringval = Getattr(n, "stringval");
+      int type = SwigType_type(t);
+      if (stringval && type == T_WSTRING) {
+        // Without the L prefix of a wide string
+        Printf(constants_code, "\"%(dunicodeescape)s\";\n", stringval);
+      } else if (stringval && type == T_WCHAR) {
+        Printf(constants_code, "'%(dunicodeescape)s';\n", stringval);
+      } else if (Getattr(n, "wrappedasconstant")) {
         Printf(constants_code, "%s;\n", Getattr(n, "staticmembervariableHandler:value"));
       } else {
         Printf(constants_code, "%s;\n", Getattr(n, "value"));
@@ -1586,7 +1593,7 @@ public:
     emit_parameter_variables(l, f);
 
     /* Attach the standard typemaps */
-    emit_attach_parmmaps(l, f);
+    emit_attach_parm_typemaps(l, f);
 
     // Parameter overloading
     Setattr(n, "wrap:parms", l);
@@ -1613,9 +1620,7 @@ public:
     // Now walk the function parameter list and generate code to get arguments
     for (i = 0, p = l; i < num_arguments; i++) {
 
-      while (checkAttribute(p, "tmap:in:numinputs", "0")) {
-        p = Getattr(p, "tmap:in:next");
-      }
+      p = emit_ignored_in_typemaps(p, f->code);
 
       SwigType *pt = Getattr(p, "type");
       String *ln = Getattr(p, "lname");
@@ -1665,6 +1670,7 @@ public:
       Delete(c_param_type);
       Delete(arg);
     }
+    p = emit_ignored_in_typemaps(p, f->code);
 
     /* Insert constraint checking code */
     for (p = l; p;) {
@@ -1706,7 +1712,7 @@ public:
     // Look for usage of throws typemap and the canthrow flag
     ParmList *throw_parm_list = NULL;
     if ((throw_parm_list = Getattr(n, "catchlist"))) {
-      Swig_typemap_attach_parms("throws", throw_parm_list, f);
+      Swig_typemap_attach_parms("throws", throw_parm_list, 0);
       for (p = throw_parm_list; p; p = nextSibling(p)) {
         if (Getattr(p, "tmap:throws")) {
           canThrow(n, "throws", p);
@@ -1730,6 +1736,12 @@ public:
         Append(f->code, "}\n");
       }
       String *actioncode = emit_action(n);
+
+      // The action of a variable setter is the memberin or globalin typemap
+      if (Getattr(n, "memberset"))
+        canThrow(n, "memberin", n);
+      else if (Getattr(n, "varset"))
+        canThrow(n, "globalin", n);
 
       /* Return value if necessary  */
       if ((tm = Swig_typemap_lookup_out("out", n, Swig_cresult_name(), f, actioncode))) {
@@ -1821,8 +1833,9 @@ public:
       // from C++ code. It checks for the common methods which set
       // a pending D exception and issues a warning if one of them has been found
       // in the typemap, but the »canthrow« attribute/feature is not set.
+      // SWIG_exception is a SWIG preprocessor macro, so it is usually found as the SWIG_DThrowException call it expands to.
       if (!Getattr(n, "d:canthrow")) {
-        if (Strstr(f->code, "SWIG_exception")) {
+        if (Strstr(f->code, "SWIG_exception") || Strstr(f->code, "SWIG_DThrowException(")) {
           Swig_warning(WARN_D_CANTHROW_MISSING,
                        input_file,
                        line_number,
@@ -4439,7 +4452,7 @@ private:
    * Determines whether the code in the typemap can throw a D exception.
    * If so, note it for later when excodeSubstitute() is called.
    * --------------------------------------------------------------------------- */
-  void canThrow(Node *n, const String *typemap, Node *parameter) const {
+  void canThrow(Node *n, const_String_or_char_ptr typemap, Node *parameter) const {
     String *canthrow_attribute = NewStringf("tmap:%s:canthrow", typemap);
     String *canthrow = Getattr(parameter, canthrow_attribute);
     if (canthrow)
@@ -4753,6 +4766,24 @@ private:
       }
     }
     return result;
+  }
+
+  /* ---------------------------------------------------------------------------
+   * D::isManifestConstant()
+   *
+   * Returns true if the %dmanifestconst feature makes a constant a D manifest constant. A string or character literal
+   * cannot initialise one of a class type, such as a wide string without typemaps for wchar_t *, so a getter is used.
+   * --------------------------------------------------------------------------- */
+  bool isManifestConstant(Node *n) {
+    if (GetFlag(n, "feature:d:manifestconst") != 1)
+      return false;
+    if (!Getattr(n, "stringval"))
+      return true;
+    String *dtype = Swig_typemap_lookup("dtype", n, "", 0);
+    String *dtypeout = Getattr(n, "tmap:dtype:out");
+    if (dtypeout)
+      dtype = dtypeout;
+    return !(dtype && Strstr(dtype, "dclassname"));
   }
 
   /* ---------------------------------------------------------------------------

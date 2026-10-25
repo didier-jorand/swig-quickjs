@@ -4871,7 +4871,7 @@ void set_transform(Image *im, double m[4][4]);
 it would be accessible from Java, but there may be no easy way to call it.
 The problem here is that a type wrapper class is generated for the two dimensional array parameter so
 there is no easy way to construct and manipulate a suitable
-<tt>double [4][4]</tt> value.   To fix this, you can write some extra C helper
+<tt>double[4][4]</tt> value.   To fix this, you can write some extra C helper
 functions.  Just use the <tt>%inline</tt> directive. For example:
 </p>
 
@@ -5272,8 +5272,8 @@ It is however possible to write JNI calls which will compile under both C and C+
 </p>
 
 <p>
-The language-independent <tt>exception.i</tt> library file can also be used
-to raise exceptions.  See the <a href="Library.html#Library">SWIG Library</a> chapter.
+The language independent <tt>SWIG_exception()</tt> function can also be used
+to raise exceptions.  See <a href="Customization.html#Customization_nn7">Using The SWIG exception library</a>.
 The typemap example <a href="#Java_exception_typemap">Handling C++ exception specifications as Java exceptions</a> provides further exception handling capabilities.
 </p>
 
@@ -5633,6 +5633,44 @@ Only the number of elements in the C array will be used.
 However, if the Java array is not large enough then you are likely to get a segmentation fault or access violation, just like you would in C.
 When arrays are used in functions like <tt>populate</tt>, the size of the C array passed to the function is determined by the size of the Java array.
 </p>
+
+<p>
+A C99 variable length array parameter, such as <tt>values</tt> in the following, is passed like a fixed size array
+of the size given at runtime, so a Java array of any other size throws an <tt>IndexOutOfBoundsException</tt>:
+</p>
+
+<div class="code">
+<pre>
+int sum(int n, const int values[n]);
+</pre>
+</div>
+
+<p>
+For an array of enums, apply the enum typemaps to the variable length array as well:
+</p>
+
+<div class="code">
+<pre>
+%apply ARRAYSOFENUMS[ANY] { name[ANY], name[*] };
+</pre>
+</div>
+
+<p>
+A <tt>null</tt> Java array is passed to the function as a NULL pointer, as for any other array parameter.
+Setting an array variable to <tt>null</tt> throws a <tt>NullPointerException</tt>, as there is no array to copy from.
+To throw a <tt>NullPointerException</tt> for a <tt>null</tt> array parameter too, add a <tt>check</tt> typemap for the array type:
+</p>
+
+<div class="code">
+<pre>
+%typemap(check) int[], int[ANY] %{
+  if (!$1) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return $null;
+  }
+%}
+</pre>
+</div>
 
 <p>
 Please be aware that the typemaps in this library are not efficient as all the elements are copied from the Java array to a C array whenever the array is passed to and from JNI code.
@@ -6079,7 +6117,7 @@ The following table lists the default type mapping from Java to C/C++.</p>
 </tr>
 
 <tr>
-<td>char *<br>char []</td>
+<td>char *<br>char[]</td>
 <td>String</td>
 <td>jstring</td>
 </tr>
@@ -7155,7 +7193,7 @@ For the typemap to be used in all type wrapper classes, all the different types 
 
 <div class="code">
 <pre>
-%typemap(javabody) SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE [], SWIGTYPE (CLASS::*) %{
+%typemap(javabody) SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE[], SWIGTYPE (CLASS::*) %{
   private transient long swigCPtr;
 
   protected $javaclassname(long cPtr, boolean bFutureUse) {
@@ -7607,7 +7645,7 @@ The default generic "throws" typemap looks like this:
 
 <div class="code">
 <pre>
-%typemap(throws) SWIGTYPE, SWIGTYPE &amp;, SWIGTYPE *, SWIGTYPE [ANY] %{
+%typemap(throws) SWIGTYPE, SWIGTYPE &amp;, SWIGTYPE *, SWIGTYPE[ANY] %{
   SWIG_JavaThrowException(jenv, SWIG_JavaRuntimeException,
                           "C++ $1_type exception thrown");
   return $null;
@@ -8455,10 +8493,10 @@ Here is an example which uses a common base class for all proxy classes and type
 
 <div class="code">
 <pre>
-%typemap(javabase) SWIGTYPE, SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE [], 
+%typemap(javabase) SWIGTYPE, SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE[],
                                                          SWIGTYPE (CLASS::*) "SWIG"
 
-%typemap(javacode) SWIGTYPE, SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE [], 
+%typemap(javacode) SWIGTYPE, SWIGTYPE *, SWIGTYPE &amp;, SWIGTYPE[],
                                                          SWIGTYPE (CLASS::*) %{
   protected long getPointer() {
     return swigCPtr;

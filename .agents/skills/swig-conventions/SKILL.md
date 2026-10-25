@@ -24,7 +24,28 @@ Format config: `Source/.clang-format` (Google style, 160 column limit).
 
 ## Comment style
 
-In source code comments under `Source/` and `Lib/`, prefer single quotes (`'`) or double quotes (`"`) when quoting a token, identifier, keyword, or short snippet. Do not use backticks (`` ` ``) - they are a Markdown convention and have no meaning in C/C++ comments. For example, write `'requires' keyword` or `"concept Name = expr;"`, not the backtick wrapped form.
+In source code comments under `Source/` and `Lib/`, prefer single quotes (`'`) or double quotes (`"`) when quoting a token, identifier, keyword or short type such as `'char [*]'`. Do not use backticks (`` ` ``) - they are a Markdown convention and have no meaning in C/C++ comments. For example, write `'requires' keyword`, not the backtick wrapped form.
+
+Do not put a code statement, declaration or a series of code examples inline in a comment's prose, quoted or not. Show the code as an indented block instead, one statement or example per line without quotes, indented two spaces further than the comment's text, and continue the prose on the next line. This:
+
+```c
+/* A function declared again with the same type, which C allows, can give the size of a C99 variable length array
+   parameter that the first declaration 'c', the one that is wrapped, does not.  For example:
+     void f(int, int a[*]);
+     void f(int n, int a[n]);
+   Keep the size from the later declaration 'n' for a typemap written with '[*]'. */
+```
+
+not this:
+
+```c
+/* A function declared again with the same type, which C allows, can give the size of a C99 variable length array
+   parameter that the first declaration 'c', the one that is wrapped, does not.  For example, 'void f(int, int a[*]);'
+   followed by 'void f(int n, int a[n]);'.  Keep the size from the later declaration 'n' for a typemap written with
+   '[*]'. */
+```
+
+In a comment whose lines start with ` * `, indent the code two spaces after the ` * `.
 
 Use plain `/* ... */` block comments. Do not use Doxygen markers (`/**`, `/*!`, `///`, `//!`): SWIG source is not run through Doxygen, so the extra marker is just noise.
 
@@ -119,7 +140,7 @@ Many AI coding tools automatically append a `Co-Authored-By: <tool>` line to com
 
 CHANGES.current entries are the release notes section for users to read what has changed. An entry is only added if a change is visible to users. Internal implementation details is not recorded here. The entries should be concise. If there is no referenced issue, then more detail can be added with a short example.
 
-When an entry affects only certain target languages, tag it with the affected language(s) in square brackets at the start of the entry, e.g. `[Python]` or `[Octave, Python, Ruby]`. Keep the whole bracket tag on one line even when it lists many languages, starting the description on the following line if needed. Omit the bracket tag for changes that affect all (or most) target languages, the parser, or the core.
+When an entry affects only certain target languages, tag it with the affected language(s) in square brackets at the start of the entry, e.g. `[Python]` or `[Octave, Python, Ruby]`. Keep the whole bracket tag on one line even when it lists many languages, starting the description on the following line if needed. Name the affected languages only in the bracket tag, never in the entry text. When a change affects groups of languages differently, write one entry per group, each with its own tag. Omit the tag only for changes that affect all target languages in the same way, the parser, or the core.
 
 If there is an associated issue number or pull request, then put it after any affected languages(s) listed in the square brackets, for example "[Lua] #3493 Restore support for Lua 5.1."
 
@@ -137,7 +158,9 @@ Show a code, interface or generated-output example as an indented block, not squ
 
 ## Hyphenation
 
-Only hyphenate compounds the C++ standard hyphenates (grammar productions like `using-declaration`, `type-constraint`, `requires-clause`, `simple-template-id`). Drop the hyphen everywhere else: `pack expansion`, `deduction guide`, `parameter pack`, `read only`, `compile time`, `runtime`, `before C++20`. When in doubt, drop it.
+Only hyphenate compounds the C++ standard hyphenates (grammar productions like `using-declaration`, `type-constraint`, `requires-clause`, `simple-template-id`). Drop the hyphen everywhere else: `pack expansion`, `deduction guide`, `parameter pack`, `read only`, `compile time`, `runtime`, `language independent`, `before C++20`. When in doubt, drop it.
+
+`runtime` is one word, never `run-time` or `run time`. Older text, notably in `Doc/Manual`, still has needless hyphens such as `language-independent` and `run-time`. Drop them in any line that a change writes or rewrites, rather than copying them.
 
 ## Disclosing AI assistance in source code contributions
 

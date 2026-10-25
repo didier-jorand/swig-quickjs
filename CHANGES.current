@@ -7,6 +7,1430 @@ the issue number to the end of the URL: https://github.com/swig/swig/issues/
 Version 4.6.0 (in progress)
 ===========================
 
+2026-10-24: wsfulton
+            Fix the 'warning' attribute of a typemap giving the same warning more than once for a
+            parameter or function, such as 3 times in Python and up to 5 times in Go for 'x' here:
+
+              %typemap(in, warning="901:in typemap used") int x "..."
+              int f(int x);
+
+            The warning is now given once for each parameter or function the typemap is used for.
+
+2026-10-24: wsfulton
+            [C] Fix the declaration in the .h file of the wrapper of a C function with an 'in' typemap
+            with numinputs=0, or a multi-argument 'in' or 'ctype' typemap, which left out parameters,
+            such as 'ignored' here or the last parameter of memmove in cdata.i:
+
+              %typemap(in, numinputs=0) int ignored "$1 = 10;"
+              int ignore_first(int ignored, int b);
+
+            The 'in' typemaps are not used when wrapping C, so the wrapper has all the parameters of
+            the function, as its declaration now does too.
+
+2026-10-24: wsfulton
+            [Javascript] Fix the napi engine leaving out some check typemaps for a function with a
+            multi-argument 'in' typemap, such as the check typemap for 'b' here:
+
+              %typemap(in) (const char *s, int len) "..."
+              %typemap(check) int len "..."
+              %typemap(check) int b "..."
+              void f(const char *s, int len, int b);
+
+2026-10-24: wsfulton
+            [R] Fix a crash for a parameter with an 'in' typemap of your own, such as this one, as the
+            freearg typemap for its type freed memory that the 'in' typemap had not allocated:
+
+              %typemap(in, numinputs=0) int *count (int temp) "$1 = &temp;"
+              %typemap(argout) int *count "..."
+              void get_count(int *count);
+
+            For a string or number array parameter, such as 'char *names[3]' or 'int values[n]', the
+            wrapper did not compile instead. The freearg typemaps for 'int *', 'double *' and the other
+            number pointers, 'char *', 'char []' and these arrays are now only used with the 'in'
+            typemap for the same type, as they free what it allocated. If an 'in' typemap of your own
+            allocates memory that one of these typemaps freed, add a freearg typemap to free it.
+
+2026-10-24: wsfulton
+            The code of an 'in' typemap with numinputs=0 now comes in the wrapper in parameter order,
+            after the code converting the earlier arguments. It came before any argument was
+            converted, so it could not use their values, such as the runtime size of a variable
+            length array parameter. An output array sized by an earlier parameter can now be
+            allocated directly:
+
+              %typemap(in, numinputs=0) double numbers[*] "$1 = (double *)calloc($1_dim0, sizeof(double));"
+              %typemap(freearg) double numbers[*] "free($1);"
+              void squares(int n, double numbers[n]);
+
+2026-10-23: wsfulton
+            [C] Fix the .cxx file not compiling for a const function pointer parameter when wrapping C++
+            code, such as:
+
+              int callconst(int (* const f)(int, int), int a, int b);
+
+2026-10-23: wsfulton
+            [C] Fix the .h file not compiling for a global variable declared with a typedef, other than
+            one of a struct or enum, such as:
+
+              typedef int *Integer;
+              Integer (*funcvar4)();
+
+2026-10-23: wsfulton
+            [C] Fix the .h file not compiling for a function pointer parameter or return type when
+            wrapping C++ code, such as:
+
+              int call(int (*f)(int), int i);
+              int (*get_operation())(int, int);
+
+2026-10-23: wsfulton
+            [C] Fix the .h file not compiling for a global variable that is a function pointer or an
+            array of function pointers, such as:
+
+              int (*operation)(int, int);
+              int (*operations[2])(int, int);
+
+2026-10-23: wsfulton
+            [Lua, OCaml, Python, Ruby, Tcl] Fix the wrappers not compiling for an overloaded function
+            with a string literal in the type of a parameter, such as:
+
+              int literal_overload(char text[sizeof("abc")]);
+              int literal_overload(int value);
+
+2026-10-23: wsfulton
+            [C] Fix the wrappers not compiling for an overloaded function with an array parameter whose
+            size is an expression, such as:
+
+              int expression_overload(int values[SIZE + 1]);
+              int expression_overload(int value);
+
+2026-10-23: wsfulton
+            Fix the wrappers not compiling for a type with a string literal in an array dimension,
+            such as the parameter in:
+
+              int literal_text_length(char text[sizeof("abc")]);
+
+2026-10-23: wsfulton
+            [C] Fix the wrappers not compiling for a function returning a function pointer when
+            wrapping C code, such as:
+
+              int (*get_operation(void))(int, int);
+
+            The getter of a function pointer variable with the -namespace option is fixed too.
+
+2026-10-23: wsfulton
+            Fix %contract checks using a member with the same name as a parameter or as the function,
+            or using a parameter's name in a character or string literal, such as:
+
+              %contract f(struct S *s, int n) {
+              require:
+                s->n == n;
+              }
+
+            The generated check did not compile or tested the wrong value. It is now correct.
+
+2026-10-22: wsfulton
+            Fix the noblock=0 attribute of a typemap or %feature, which removed the braces around the
+            code as noblock=1 does. The braces are now kept, as when there is no noblock attribute.
+
+2026-10-22: wsfulton
+            [C] Fix the wrapper not compiling for a global array variable when wrapping C code with the
+            -namespace option, such as:
+
+              int numbers[3];
+
+2026-10-22: wsfulton
+            [R] Fix a function returning a pointer to a type that is not a wrapped class, such as
+            'void *' or 'int *', which failed with the error '"_p_void" is not a defined class'.
+
+2026-10-22: wsfulton
+            [R, Scilab] Add support for "check" typemaps. They were ignored, so their code, such as
+            checking that an argument is valid, was missing from the wrappers.
+
+2026-10-22: wsfulton
+            [OCaml] Fix a segmentation fault calling a function that takes or returns an enum type
+            written with the 'enum' keyword, such as 'enum Color get_color(enum Color c)', or that
+            takes an array of such enums using carray.i.
+
+2026-10-22: wsfulton
+            [C] Add support for "argout" typemaps when wrapping C++ code. They were ignored, so their
+            code, such as setting an output parameter, was missing from the wrappers. As for the other
+            typemaps, an "argout" typemap that uses SWIG_exception or SWIG_fail needs the canthrow
+            attribute. $result is the variable holding the return value, so an "argout" typemap that
+            uses it for a function returning void is an error.
+
+2026-10-22: wsfulton
+            [C] Fix the $symname special variable, which was not expanded in some typemaps, such as a
+            "check" typemap, giving a wrapper that did not compile. It is now expanded in all the
+            typemaps used in a wrapper function.
+
+            Also with the -namespace option, $symname no longer includes the namespace prefix, as in
+            the other target languages. This changes $symname in typemaps, %exception and %exceptionvar
+            for a class member, constructor or destructor and for the getter or setter of a variable.
+            For example, with '-namespace ns', $symname is now 'Klass_method' instead of
+            'ns_Klass_method' for the method 'method' of class 'Klass' and 'gvar_get' instead of
+            'ns_gvar_get' for the getter of the global variable 'gvar'. It is unchanged for a function
+            that is not a class member, such as 'func'.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-22: wsfulton
+            [C] Fix the wrapper not compiling when wrapping C code for a function with a function
+            pointer parameter, a multidimensional array parameter or an array parameter of structs or
+            of pointers to structs, such as:
+
+              int apply(int (*op)(int, int));
+              int sum_items(struct Item items[]);
+              double trace(int n, double m[n][n]);
+
+2026-10-22: wsfulton
+            [OCaml] Fix carray.i for a fixed size array of enums, such as 'Color a[3]', which raised
+            Failure "No appropriate conversion found." as the typemap for an array of structs was used.
+            An OCaml array with fewer elements than a fixed size array left the rest of the C array
+            uninitialised. It now raises Invalid_argument.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-22: wsfulton
+            [Javascript] The code of an "in" typemap is no longer put inside an extra pair of braces,
+            which no other target language adds. A local variable declared in the code of a typemap
+            written with "" or %{ %} delimiters is now in the scope of the whole wrapper function, as
+            in the other target languages, so it can clash with a variable of the same name declared
+            by another typemap, for example when two parameters use this typemap:
+
+              %typemap(in) int %{
+                int tmp = 0;
+                ...
+                $1 = tmp;
+              %}
+
+            Such typemaps must be changed to use { } delimiters.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-22: wsfulton
+            [PHP] The 'char INPUT[ANY]' and 'char OUTPUT[ANY]' typemaps in typemaps.i are no longer
+            supported and have been removed, for consistency with the other target languages, which
+            have no array typemaps in typemaps.i. To keep using them, copy them from typemaps.i in an
+            earlier version of SWIG into an interface file.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-22: wsfulton
+            [Javascript] The wrapper code that comes after an "in" typemap with noblock=1, such as the
+            conversion of the next argument, is now correct when the typemap ends with a // comment.
+
+2026-10-22: wsfulton
+            [Tcl] The "freearg" typemap of a parameter whose "in" typemap has numinputs=0 was not
+            used, so memory allocated for such a parameter, such as an output array, was not freed.
+            It is now used, as in the other target languages.
+
+2026-10-22: wsfulton
+            [Lua] The array typemaps in typemaps.i are no longer supported and have been removed, for
+            consistency with the other target languages. These are the INPUT, OUTPUT and INOUT
+            typemaps for numbers, enums and pointers in a fixed size array, such as 'int INPUT[ANY]',
+            or in an array passed with its length, such as '(double *INOUT, int)'. The helpers they
+            used are removed too, so a typemap of your own that uses one no longer compiles. These are
+            the functions SWIG_itable_size, SWIG_table_size, SWIG_read_<type>_num_array,
+            SWIG_get_<type>_num_array_fixed, SWIG_get_<type>_num_array_var,
+            SWIG_write_<type>_num_array, SWIG_read_ptr_array, SWIG_get_ptr_array_fixed,
+            SWIG_get_ptr_array_var and SWIG_write_ptr_array, the macros SWIG_ALLOC_ARRAY,
+            SWIG_FREE_ARRAY and SWIG_DECLARE_TYPEMAP_ARR_FN and the SWIG_TYPEMAP_NUM_ARR %define. To
+            keep using them, copy them from typemaps.i in an earlier version of SWIG into an
+            interface file.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-21: wsfulton
+            Warnings and errors about a typemap now give the line of its %typemap directive. They gave
+            the line where its code ends, or the line after a typemap written on one line.
+
+2026-10-21: wsfulton
+            Fix typemaps for an array whose size contains a '.', such as 'int a[sizeof(s.x)]'. The
+            typemaps for 'int[ANY]' were not used for it.
+
+2026-10-21: wsfulton
+            [OCaml] Fix carray.i for a fixed size array of structs, which failed for any array of
+            wrapped objects. Also fix a fixed size char array parameter, such as 'char a[4]', being
+            freed even though it is a local array, which crashed.
+
+2026-10-20: wsfulton
+            [OCaml] Fix carray.i for an array parameter of unknown size, such as 'int []' or 'Foo []' for
+            a struct or enum Foo. The wrapper code did not compile. The function is now passed a copy of
+            the OCaml array, with the same number of elements, which is then freed. An "in" typemap of
+            your own for the same type, such as 'int []', now also needs a "freearg" typemap, which can
+            be empty, or the pointer it sets is freed.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-20: wsfulton
+            Fix '$1_dim10' to '$1_dim19' in typemaps, which were replaced as '$1_dim1' followed by a
+            digit for an array with 11 or more dimensions.
+
+2026-10-20: wsfulton
+            Fix a 'throws' typemap that declares a local variable, which gave a wrapper that did not
+            compile, for example:
+
+              %typemap(throws) int (const char *message) {
+                message = $1 == 1 ? "int 1 thrown" : "int thrown";
+                SWIG_exception(SWIG_RuntimeError, message);
+              }
+
+            The local variable was not declared in the catch block that uses it. C#, D and Java also
+            declared an unused local variable in the wrapper, such as 'message1', which is an error
+            with -Werror. The local variable is now declared in the catch block.
+
+2026-10-19: wsfulton
+            [C] Fix the wrapper of a member inherited from a base class ignoring the %exception code and
+            the exception specification of the base class member, for example:
+
+              %exception Base::get {...}
+              struct Base {
+                int get();
+              };
+              struct Derived : Base {
+              };
+
+            An exception thrown by Base::get() was caught when calling Base_get() but not when calling
+            Derived_get(), so it terminated the program. Derived_get() now uses the %exception code, the
+            exception specification, %catches and the other features of the base class member, as
+            Base_get() does.
+
+2026-10-19: wsfulton
+            [C] Fix the wrapper not compiling when wrapping C code for a function with an array
+            parameter, such as:
+
+              short sum_array(short x[5]);
+
+            The wrapper declared the parameter as 'short [5] arg1' instead of 'short arg1[5]'.
+
+2026-10-18: wsfulton
+            [C] Fix %exception being ignored when wrapping C code, that is without the -c++ option,
+            such as:
+
+              %exception positive_result {
+                $action
+                if (result <= 0)
+                  SWIG_exception(SWIG_ValueError, "positive result expected");
+              }
+
+            The wrapper called the wrapped function without the %exception code. %feature("action")
+            and %contract code were ignored too. They are now used, as they are when wrapping C++ code.
+
+2026-10-18: wsfulton
+            [C] Fix wrappers that did not compile when wrapping C code, such as for:
+
+              int counter;
+              const int get_limit(void);
+
+            The wrapper for a function returning a const type, such as get_limit(), assigned the result
+            to a const variable. With the -namespace option, global variables such as counter are wrapped
+            with accessor functions, which called the variable as if it were a function, as in
+            counter(arg1). The wrappers now compile.
+
+2026-10-18: wsfulton
+            [C] The SWIG error codes, such as SWIG_ValueError, are now defined in the generated header, so
+            C code can check the error code of a pending exception by name, for example:
+
+              if (SWIG_CException_code_get(ex) == SWIG_ValueError) {...}
+
+            Before, the number had to be used instead, such as -9.
+
+2026-10-17: wsfulton
+            [C] #3588 Fix a memory leak when an error is raised after an 'in' typemap has allocated memory.
+            SWIG_exception left the wrapper without running the 'freearg' typemaps that release the memory.
+            SWIG_exception now leaves the wrapper with the new SWIG_fail macro, which jumps to a fail label
+            at the end of the wrapper. The code after the label runs the 'freearg' typemaps and then returns.
+            SWIG_fail can also be used directly in a typemap to leave the wrapper after an error.
+
+            A typemap using SWIG_exception or SWIG_fail must now have the canthrow attribute, which
+            generates the fail label, for example:
+
+              %typemap(check, canthrow=1) int positive {
+                if ($1 <= 0)
+                  SWIG_exception(SWIG_ValueError, "positive value expected");
+              }
+
+            Without it, the wrapper does not compile. Warning 762 is given if SWIG_exception or SWIG_fail is
+            found in a wrapper without the canthrow attribute. The warning cannot be relied on though, as other
+            ways of jumping to the fail label are not found, such as a macro that uses SWIG_fail.
+
+            %exception and %exceptionvar have the canthrow attribute set, as do the library typemaps that
+            raise an error.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-17: wsfulton
+            [C#, D] Fix missing warning for SWIG_exception used without the canthrow attribute, such as
+            in this typemap:
+
+              %typemap(check) int number {
+                if ($1 < 0)
+                  SWIG_exception(SWIG_ValueError, "only positive numbers accepted");
+              }
+
+            The exception was not thrown, as the proxy method did not check for a pending exception,
+            yet no warning was given. Now warning 845 (C#) or 711 (D) is given, as it already was for
+            SWIG_CSharpSetPendingException and SWIG_DSetPendingException. Add canthrow=1 to fix it.
+
+2026-10-17: wsfulton
+            [C#, D] Fix %exceptionvar code that raises an exception when a variable is accessed, such as:
+
+              %exceptionvar number {
+                $action
+                if (number < 0)
+                  SWIG_exception(SWIG_ValueError, "number is negative");
+              }
+
+            Before, the variable's getter and setter did not check for the pending exception, so the
+            exception was not thrown. Now it is thrown, as it is for %exception code.
+
+2026-10-16: wsfulton
+            Fix %template when a template argument has the same name as a later template parameter.
+            For example, 'Second' is both a type and the name of the second template parameter here:
+
+              struct Second { int value; };
+              template<typename First, typename Second> struct Pair {
+                First first;
+                Second second;
+                Pair *link;
+              };
+              %template(PairSecond) Pair<Second, int>;
+
+            The template was wrapped with the wrong types or the wrappers did not compile. Function
+            templates were affected too.
+
+2026-10-16: wsfulton
+            Fix %template of a class template with a default template argument when a template
+            argument has the same name as a later template parameter. For example, 'Second' is both a
+            type and the name of the second template parameter here:
+
+              struct Second { int value; };
+              template<typename First, typename Second, typename Third = First> class Defaulted {...};
+              %template(DefaultedSecondInt) Defaulted<Second, int>;
+
+            The template was wrapped with the wrong template arguments or the wrappers did not compile.
+
+2026-10-16: wsfulton
+            Fix %contract checks testing the wrong value when a parameter has the same name as a
+            variable in the generated wrapper, such as 'arg1' or 'result':
+
+              %contract f(int x, int arg1, int *result) {
+              require:
+                x > 0;
+              ensure:
+                f > 0;
+              }
+
+            Some of these checks did not compile.
+
+2026-10-16: wsfulton
+            A typemap written with '*' as the size of an array, such as 'char [*]', is now used for a
+            C99 variable length array parameter. Its '$1_dim0' is the size worked out at runtime from
+            the earlier parameter:
+
+              int char_length(int n, const char s[n]);
+
+            The size is used even when the function is first declared without it, as C allows:
+
+              int char_length(int, const char [*]);
+              int char_length(int n, const char s[n]);
+
+            In a multidimensional array, each dimension whose size is only known at runtime is written
+            with '*', as in 'double [*][*]' for 'double m[r][c]'. A dimension with a constant size is
+            written with its size or with ANY, as in 'double [*][ANY]' for 'double m[n][3]'. '$1_dim1'
+            and so on are the sizes of the other dimensions and '$1_size' is all the sizes multiplied
+            together.
+
+            A typemap written with '*' is used before any typemap for an array of unknown size, even
+            when the '*' typemap only matches once a qualifier is removed or a typedef is resolved. So
+            'int [*]' is used rather than 'const int []' for 'const int a[n]'. The default typemaps are
+            looked for in the same order, 'SWIGTYPE [*]' before 'SWIGTYPE []'.
+
+            A typemap written with the size as declared, such as 'const char s[n]' or
+            'const char [n]', is used before any typemap written with '*'. It is used in the same way,
+            so its '$1_dim0' is the size worked out at runtime too. Its size has to be written as
+            declared, so it does not match 'const char s[len]'.
+
+            In a multi-argument typemap, an array written with '*', or with a size that refers to an
+            earlier parameter of the typemap, only matches a variable length array parameter. Its
+            '$2_dim0' and so on are the sizes of that array:
+
+              %typemap(in) (int n, double values[n]) {...}
+              double sum(int n, double values[n]);
+
+            Such typemaps are provided for a char array in every target language except C, which passes
+            the array on unchanged. In R, they are also provided for an array of numbers, enums or
+            strings. They copy the string or vector into an array of that size, as for a fixed size
+            array, instead of passing it without checking its length. A string or vector too long for
+            the array is now an error.
+
+            The typemaps for a fixed size array in arrays_java.i, arrays_javascript.i and carray.i are
+            also used for a variable length array parameter, with the size it has at runtime, such as
+            'n' for 'values' here:
+
+              int sum(int n, const int values[n]);
+
+            arrays_java.i throws an IndexOutOfBoundsException for an array that is not 'n' long.
+            arrays_javascript.i reports an error for an array shorter than 'n', as carray.i does with
+            Invalid_argument. For ARRAYSOFENUMS use:
+
+              %apply ARRAYSOFENUMS[ANY] { name[ANY], name[*] };
+
+            The size is only known once the arguments are converted. So it can only be used in the
+            'in', 'check', 'argout' and 'freearg' typemaps. Using it anywhere else is an error, such
+            as in a target language typemap or a typemap's local variables or attributes.
+
+2026-10-16: vadz
+            [Python] Fix "metaclass conflict" TypeError when importing a module with a class using
+            the nondynamic feature that derives from a nondynamic class from another module.
+
+2026-10-16: vadz
+            [Python] Fix accessing the elements of a wrapped STL container of a class using the
+            nondynamic feature, which raised AttributeError.
+
+2026-10-16: vadz
+            [Python] Setting a property of a class using the nondynamic feature no longer calls its
+            getter, so it works even when the getter throws, e.g. because the value is not set yet.
+
+2026-10-15: wsfulton
+            A C99 variable length array parameter, which has a size that refers to an earlier
+            parameter, is now wrapped as an array of unknown size, such as 'char []'. It was wrapped
+            as a fixed size array, such as 'char [ANY]'. The wrappers did not compile for some types,
+            such as these:
+
+              int char_length(int n, const char s[n]);
+              double trace(int n, double m[n][n]);
+
+            Typemaps for a fixed size array are no longer used for such a parameter. A typemap
+            written with the size as declared, such as 'const char s[n]', is still used.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-15: wsfulton
+            Fix a template argument containing a '.', such as a floating point literal, a member
+            access or a C++20 designated initializer, which was scrambled in the generated code so
+            that it did not compile:
+
+              struct Point { int x, y; };
+              constexpr Point s{1, 2};
+              template<double D> struct DoubleValue {...};
+              template<int N> struct IntValue {...};
+              template<Point P> struct PointValue {...};
+
+              %template(D) DoubleValue<1.5>;            // was DoubleValue< 5 1. >
+              %template(X) IntValue<s.x>;               // was IntValue< x s. >
+              %template(P) PointValue<Point{.x = 1}>;   // was PointValue< x = 1} Point{. >
+
+            Also fix a default argument value such as 's.y' becoming 's.int' when 'typedef int y;'
+            is in scope and %feature("compactdefaultargs") is used.
+
+2026-10-15: wsfulton
+            Add support for C++11 default template arguments in function templates. %template can now
+            leave out the template arguments that have defaults, as for a class template, such as:
+
+              template<typename T, typename U = int> int value(T t) { return 1; }
+              %template(value_int) value<int>;
+
+            Previously %template gave the error "No matching function template" unless every template
+            argument was given. For an overloaded function template, an overload needing a default was
+            left out instead, with no error if another overload took the template arguments. Such an
+            overload is now instantiated too, as C++ also considers it. Its wrapper does not compile if
+            its body does not work for the template arguments, such as the first area in:
+
+              template<typename T, typename U = void> int area(T *shape) { return shape->area(); }
+              template<typename T> int area(T side) { return side * side; }
+              %template(area) area<int>;
+
+            which is now also instantiated as 'int area(int *shape)' using the default for U. Its body
+            does not compile as int has no area() member. To wrap only the second area as before,
+            ignore the first one:
+
+              %ignore area<int>(int *);
+              %template(area) area<int>;
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-15: wsfulton
+            %template on an overloaded function template now instantiates only the overloads whose
+            template parameters take the template arguments: a type for a type template parameter, a
+            value for a non-type template parameter and a template for a template template parameter.
+            Previously every overload with as many template parameters as template arguments was
+            instantiated, whatever the kind of argument. The wrapper did not compile when the parameter
+            or return types of such an overload used a template parameter given the wrong kind of
+            argument, such as the value 10 for the type template parameter T in:
+
+              template<typename T> T kindp(T t) { return t; }
+              template<int N> int kindp(int i) { return N + i; }
+              %template(kindp_10) kindp<10>;
+
+            which also instantiated the first kindp as '10 kindp(10 t)'. A type for a non-type template
+            parameter failed in the same way, such as int for N in an 'int (&a)[N]' parameter.
+
+            A template parameter with a type not declared to SWIG, such as 'std::size_t N' without a
+            typedef for size_t, takes any template argument, as the name could also be a concept
+            constraining a type template parameter.
+
+2026-10-15: wsfulton
+            Function templates differing only in their template parameters are now overloads, as in C++.
+            They were taken to be a redefinition, giving Warning 302 and ignoring the later function
+            template, so %template instantiated the earlier one instead. For example:
+
+              template<typename T> T make() { return T(); }
+              template<int N> int make() { return N; }
+              %template(make_5) make<5>;
+
+            instantiated the first make as '5 make()', which did not compile.
+
+2026-10-14: wsfulton
+            Add support for 'static', type qualifiers and '*' in the brackets of a function
+            parameter's array, as allowed by C99, which were a syntax error.  They do not change
+            the function's type, so they are ignored and the parameter is wrapped as if they were
+            not there:
+
+              double average(const double values[static 3]);
+              void clear(int buffer[const 10]);
+              int total(size_t, const int [*]);
+
+            They are reported as an error for a global variable, structure member or typedef.
+
+2026-10-14: wsfulton
+            [R] Fix the wrapper for a function pointer type with an array parameter, which did
+            not compile:
+
+              typedef int (*summer)(const int a[3]);
+
+2026-10-14: wsfulton
+            [C, C#, D, Go, Guile, Java, Lua, PHP] An exception caught by the catch all handler that
+            %catches(...) adds is now raised as a SWIG_RuntimeError with the message "unknown exception",
+            as in the other target languages. Before, it was rethrown with warning 468 unless the interface
+            file included exception.i. To rethrow it as before, add this to the interface file:
+
+              %typemap(throws) (...) "throw;"
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-14: wsfulton
+            %include <exception.i> is no longer needed and the file now does nothing. The 'throws' typemap
+            for '...' used by %catches(...) is now always available. Every C++ wrapper now includes the
+            <stdexcept> and <typeinfo> headers needed by SWIG_CATCH_STDEXCEPT and SWIG_CATCH_UNKNOWN.
+
+2026-10-14: wsfulton
+            [Guile] A global variable that is an array of unknown size, such as 'extern int b[];' or
+            'extern char name[];', now gives warning 462, as in the other target languages. Setting it
+            still raises wrong-type-arg.
+
+2026-10-14: wsfulton
+            [Python] Fix a memory leak with -castmode of a std::pair made from a tuple whose first element
+            is converted with a cast of higher rank than its second, such as a float for an int.
+
+2026-10-13: wsfulton
+            [R] NULL now selects an overloaded function taking a char array, such as 'char [4]' or
+            'char []', as it does for any other array.
+
+2026-10-13: wsfulton
+            [Octave, Perl, Python, Ruby, Scilab, Tcl] A string now selects an overloaded function taking a
+            reference to a char array, such as 'char (&)[4]' or 'char (&&)[4]', as it does for 'char [4]'.
+
+2026-10-13: wsfulton
+            [Guile, Lua, PHP] A string now selects an overloaded function taking a char array, such as
+            'char [4]', as it does for 'char *'. In Guile it now does for 'char []' too. In PHP, null now
+            selects one too, as for any other array.
+
+2026-10-13: wsfulton
+            [OCaml] Setting a read only member or global variable now raises Failure "Unable to set 'x', as
+            it is read only" instead of being silently ignored.
+
+2026-10-13: wsfulton
+            [R] Setting a read only member variable, or a name that is not a member variable, with $<- or
+            [[<- now gives an error instead of a stack overflow ("C stack usage" or "node stack overflow").
+            Getting a name that is not a member variable or method with $ now gives NULL, also instead of a
+            stack overflow.
+
+2026-10-13: wsfulton
+            [PHP] Setting a read only member variable now throws an Error "Cannot modify readonly property
+            Foo::$x", as for a PHP readonly property, instead of "Invalid callback , no array or string
+            given".
+
+2026-10-13: wsfulton
+            [C] Fix a derived class having a set function for an inherited read only member variable. The
+            wrapper code did not compile for a const member variable and a member variable made read only
+            with %immutable could be set.
+
+2026-10-13: wsfulton
+            [Scilab] Remove the extra ';' after the gateway function in the generated code for Scilab 6 and
+            later, which gives an "extra ';' outside of a function" warning with -Wextra-semi in C++.
+
+2026-10-13: wsfulton
+            [Perl] Fix reading a global variable of pointer, array, reference or class type changing a
+            pointer object assigned to it. After a failed set, such as setting an 'int *' variable to a
+            'double *' pointer object, reading the variable changed that object to hold the variable's
+            pointer and gave it as the variable's value. After a successful set, a later change to the
+            variable in C changed the assigned pointer object too. The variable no longer holds a
+            reference to the assigned pointer object, so, as in the other target languages, the object
+            must be kept alive for as long as C uses the pointer.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-13: wsfulton
+            [Javascript] null for an array parameter using the arrays_javascript.i typemaps, such as
+            'int []' or 'double [4]', is now passed on to the function as a NULL pointer, as for any other
+            array parameter, instead of raising an error. Setting an array variable to null still raises
+            an error. To raise an error for a null array parameter as before, add a check typemap for each
+            array type, for example:
+
+              %typemap(check) int[], int[ANY] %{
+                if (!$1) {
+                  SWIG_exception(SWIG_ERROR, "null array");
+                }
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-13: wsfulton
+            [Java] A null Java array for an array parameter using the arrays_java.i typemaps, such as
+            'int []' or an array of classes from JAVA_ARRAYSOFCLASSES, is now passed on to the function as
+            a NULL pointer, as for any other array parameter, instead of throwing a NullPointerException.
+            Setting an array variable to null still throws a NullPointerException. To throw one for a null
+            array parameter as before, add a check typemap for each array type, for example:
+
+              %typemap(check) int[], int[ANY] %{
+                if (!$1) {
+                  SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+                  return $null;
+                }
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-13: wsfulton
+            An rvalue reference to an array, such as 'int (&&)[4]', is now wrapped as a reference to an
+            array, as a parameter or as a member or global variable. The wrapper code did not compile,
+            except for an array of char in some target languages. As for a reference to an array, NULL
+            gives a NULL reference error, an array of char is a string and no ownership is taken.
+
+2026-10-13: wsfulton
+            [C] NULL for a reference to a primitive type, bool or an enum, such as 'int &' or 'int *&', now
+            gives a NULL reference error instead of passing a NULL reference to the wrapped function.
+
+2026-10-13: wsfulton
+            [Perl] Fix a crash reading a global variable of pointer, array, reference or class type after
+            setting it to undef or after a failed set, such as setting a read only array variable.
+
+2026-10-13: wsfulton
+            A global or member variable that is a reference to an array of unknown size, such as
+            'int (&)[]', is now read only with warning 462, as is an array of unknown size, since there is
+            no size to bound a copy of the elements. The wrapper code for setting it did not compile.
+
+2026-10-13: wsfulton
+            [C, Go, OCaml] NULL for a reference parameter, such as 'Foo &' or 'int (&)[4]', now gives a
+            NULL reference error, as in the other target languages, instead of passing a NULL reference to
+            the wrapped function.
+
+2026-10-11: wsfulton
+            [Javascript, Octave, Perl, Python, R, Ruby, Scilab, Tcl] SWIG_CATCH_STDEXCEPT now catches
+            std::bad_cast and raises SWIG_TypeError, as it already did in the other target languages,
+            instead of SWIG_SystemError from catching std::exception. This is for better consistency of
+            the error handling common to all target languages, which now has a single definition of
+            SWIG_CATCH_STDEXCEPT. To raise SWIG_SystemError as before, redefine SWIG_CATCH_STDEXCEPT in the
+            interface file:
+
+              #undef SWIG_CATCH_STDEXCEPT
+              %define SWIG_CATCH_STDEXCEPT
+                catch (std::invalid_argument& e) {
+                  SWIG_exception(SWIG_ValueError, e.what());
+                } catch (std::domain_error& e) {
+                  SWIG_exception(SWIG_ValueError, e.what());
+                } catch (std::overflow_error& e) {
+                  SWIG_exception(SWIG_OverflowError, e.what());
+                } catch (std::out_of_range& e) {
+                  SWIG_exception(SWIG_IndexError, e.what());
+                } catch (std::length_error& e) {
+                  SWIG_exception(SWIG_IndexError, e.what());
+                } catch (std::runtime_error& e) {
+                  SWIG_exception(SWIG_RuntimeError, e.what());
+                } catch (std::exception& e) {
+                  SWIG_exception(SWIG_SystemError, e.what());
+                }
+              %enddef
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            SWIG_exception can now be used anywhere without %include <exception.i>, such as in a typemap or
+            in %exception code, as its support code is now always included, for example:
+
+              %typemap(check) int positive {
+                if ($1 <= 0)
+                  SWIG_exception(SWIG_ValueError, "Expected a positive value.");
+              }
+
+            SWIG_exception_fail is now available in every target language, as the same macro as
+            SWIG_exception. This is part of a refactor for consistent error handling, including in the
+            typemaps common to all target languages.
+
+2026-10-11: wsfulton
+            [R] SWIG_exception now raises an R error for SWIG_IndexError, as for the other error codes,
+            instead of returning NA. This is part of a refactor for consistent error handling, including
+            in the typemaps common to all target languages. To return NA as before, redefine
+            SWIG_exception in the interface file. Also redefine SWIG_exception_fail, which the SWIG
+            library typemaps use, to keep its behaviour:
+
+              %{
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) do { if ((code) == SWIG_IndexError) \
+                return Rf_ScalarLogical(NA_LOGICAL); SWIG_Error(code, msg); SWIG_fail; } while (0)
+              #undef SWIG_exception_fail
+              #define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while (0)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [Ruby] SWIG_exception now jumps to the wrapper's fail label after raising the error, as
+            SWIG_exception_fail does, so it can only be used in a wrapper function, as in the other target
+            languages. As rb_raise does not return, it could be used elsewhere before, such as in the body
+            of an %extend method or in a %{ %} function. This is part of a refactor for consistent error
+            handling, including in the typemaps common to all target languages. To use it elsewhere as
+            before, redefine SWIG_exception in the interface file. Also redefine SWIG_exception_fail, which
+            the SWIG library typemaps use, to keep its behaviour:
+
+              %{
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) do { SWIG_Error(code, msg); } while (0)
+              #undef SWIG_exception_fail
+              #define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while (0)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [Javascript] With Node-API and NAPI_CPP_EXCEPTIONS, SWIG_exception now jumps to the wrapper's
+            fail label after throwing the error, as SWIG_exception_fail does, so it can only be used in a
+            wrapper function, as in the other target languages. As the error is a C++ exception, it could be
+            used elsewhere before, such as in the body of an %extend method or in a %{ %} function. This is
+            part of a refactor for consistent error handling, including in the typemaps common to all target
+            languages. To use it elsewhere as before, redefine SWIG_exception in the interface file. Also
+            redefine SWIG_exception_fail, which the SWIG library typemaps use, to keep its behaviour:
+
+              %{
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) SWIG_Error(code, msg)
+              #undef SWIG_exception_fail
+              #define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while (0)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [Tcl] SWIG_exception now leaves the wrapper through its cleanup code, as SWIG_fail does, so any
+            memory allocated for the arguments is freed. It returned TCL_ERROR directly before. This
+            corrects the error handling as part of a refactor for consistent error handling, including in
+            the typemaps common to all target languages. To return directly as before, redefine
+            SWIG_exception in the interface file. Also redefine SWIG_exception_fail, which the SWIG library
+            typemaps use, to keep its behaviour:
+
+              %{
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) do { SWIG_Error(code, msg); return TCL_ERROR; } while (0)
+              #undef SWIG_exception_fail
+              #define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while (0)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [Scilab] SWIG_exception now leaves the wrapper after setting the error. It carried on with the
+            rest of the wrapper before. This corrects the error handling as part of a refactor for
+            consistent error handling, including in the typemaps common to all target languages. To carry
+            on after the error as before, redefine SWIG_exception in the interface file. Also redefine
+            SWIG_exception_fail, which the SWIG library typemaps use, to keep its behaviour:
+
+              %{
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) SWIG_Scilab_Error(code, msg)
+              #undef SWIG_exception_fail
+              #define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while (0)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [C] SWIG_exception now returns from the wrapper after raising the error. It carried on with the
+            rest of the wrapper before, after raising the SWIG_CException when wrapping C++ code, or after
+            calling any SWIG_exception defined in C by the user when wrapping C code or using -noexcept. This
+            corrects the error handling as part of a refactor for consistent error handling, including in the
+            typemaps common to all target languages. To carry on as before, redefine SWIG_exception in the
+            interface file before using it:
+
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) SWIG_CException_Raise(code, msg)
+
+            When wrapping C code or using -noexcept, only the #undef is needed.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [C#] SWIG_exception now throws an ArgumentNullException for SWIG_NullReferenceError, as the null
+            checks in the C# typemaps do, instead of a NullReferenceException. This is part of a refactor for
+            consistent error handling, including in the typemaps common to all target languages. To throw a
+            NullReferenceException as before, redefine SWIG_exception in the interface file before using it:
+
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) { if ((code) == SWIG_NullReferenceError) \
+                SWIG_CSharpSetPendingException(SWIG_CSharpNullReferenceException, msg); \
+                else SWIG_CSharpException(code, msg); return $null; }
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-11: wsfulton
+            [Guile] SWIG_exception now raises an error with a symbol as its key, such as swig-type-error,
+            so it can be caught by name. It used a string as the key before, which Guile does not accept,
+            so a wrong-type-arg error was raised instead. SWIG_NullReferenceError now gives misc-error, as
+            for the null checks in the Guile typemaps. This is part of a refactor for consistent error
+            handling, including in the typemaps common to all target languages. To raise the same errors
+            as before, redefine SWIG_exception in the interface file:
+
+              %{
+              SWIGINTERN void SWIG_exception_string_key(int code, const char *msg, const char *subr) {
+                static const char *keys[] = { "swig-error", "swig-io-error", "swig-runtime-error",
+                  "swig-index-error", "swig-type-error", "swig-division-by-zero", "swig-overflow-error",
+                  "swig-syntax-error", "swig-value-error", "swig-system-error", "swig-error",
+                  "swig-memory-error", "swig-null-reference-error" };
+                const char *key = code <= -1 && code >= -13 ? keys[-code - 1] : "swig-error";
+                scm_error(scm_from_locale_string(key), subr, msg, SCM_EOL, SCM_BOOL_F);
+              }
+              #undef SWIG_exception
+              #define SWIG_exception(code, msg) SWIG_exception_string_key(code, msg, FUNC_NAME)
+              %}
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-10: wsfulton
+            [OCaml] An array, such as 'int [4]', 'Foo [2]' or 'int [2][3]', is now wrapped as a
+            pointer to its first element by default, as in the other target languages. An array
+            parameter, member variable or global variable failed with an error such as "Array
+            arguments for arbitrary types need a typemap", unless array typemaps, such as those in
+            carray.i, were used. C_void is passed as a NULL pointer for an array parameter. Setting
+            an array member or global variable copies the elements, raising Invalid_argument for
+            NULL. A global variable that is an array of unknown size, such as 'int []', is read only
+            and gives warning 462.
+
+2026-10-10: wsfulton
+            [C#] The arrays_csharp.i FIXED[] typemaps for 'long' and 'unsigned long' now use a C#
+            int[] or uint[], as the INPUT[], OUTPUT[] and INOUT[] typemaps do, unless SWIGWORDSIZE64
+            is defined. They always used long[] or ulong[], which passed the wrong data where long
+            is 32 bits, such as on Windows.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-10: wsfulton
+            [C#] Fix the arrays_csharp.i 'long' and 'unsigned long' INPUT[], OUTPUT[] and INOUT[]
+            typemaps when typemaps.i is included after arrays_csharp.i. typemaps.i replaced them with
+            typemaps that crashed for null and passed only the first element, so these arrays now
+            behave as for the other primitive types.
+
+2026-10-10: wsfulton
+            [R] NULL now selects an overloaded function or method taking a pointer to or an array
+            of numbers, bools or enums, such as 'int *', 'double []' or 'bool [3]', or an array of
+            strings, such as 'char *[3]', where it gave "cannot find overloaded function". A
+            character vector of enum names, such as c("One", "Two"), now also selects an overload
+            taking a fixed size enum array, such as 'enum Finger [2]'.
+
+2026-10-09: wsfulton
+            [OCaml] An enum passed or returned by const reference, such as 'const Color &', is now
+            converted to and from an OCaml enum value, as when passed by value, rather than being
+            handled as a pointer. So is a global variable of such a type. An enum value could not be
+            passed for such a parameter. A director method returning one crashed.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-09: wsfulton
+            [OCaml] Fix director methods with an enum or a member pointer parameter, which gave
+            wrapper code that did not compile.
+
+2026-10-09: wsfulton
+            [OCaml] Fix a crash when C_void is passed for an array with the carray.i typemaps,
+            such as 'int [4]'. A NULL pointer is now passed for a parameter. Setting a member
+            variable now raises Invalid_argument.
+
+2026-10-09: wsfulton
+            [Scilab] An empty matrix for a parameter that is an array of numbers, bools or strings,
+            such as 'int [4]', 'double []', 'bool [4]' or 'char *[]', is now passed as a NULL
+            pointer, as NULL is in the other target languages. It was passed as memory for no
+            elements, which the function read past the end of, or rejected for bools and strings.
+            Setting an array member or global variable, such as 'int [4]', to an empty matrix now
+            gives a SWIG NullReferenceError rather than copying from it. The matrix.i typemaps for
+            'char **' and a std::vector<bool> parameter also now accept an empty matrix.
+
+2026-10-09: wsfulton
+            [C#, D, Go, Guile, Java, Lua, PHP] Fix a crash when setting an array member or global
+            variable, such as 'int [4]', 'Foo [2]' or 'int [2][3]', to NULL, such as null in Java,
+            as the array was copied from it. An error is now raised instead, as in the other target
+            languages. NULL for an array parameter is still passed as a NULL pointer.
+
+2026-10-09: wsfulton
+            [C] When wrapping C++, fix a crash when setting an array member or global variable,
+            such as 'int [4]' or 'int [2][3]', to NULL. SWIG_exception is now called with
+            SWIG_NullReferenceError instead, which raises a SWIG_CException.
+
+2026-10-09: wsfulton
+            [C#, D] The canthrow attribute now works in memberin and globalin typemaps, so that a
+            pending exception set in one of these typemaps is thrown when setting the variable.
+
+2026-10-09: wsfulton
+            Fix a string literal with characters after an embedded NUL, such as "a\0bc" or
+            L"a\0bc", where SWIG copies the literal into the generated code, such as for a
+            constant from '#define S "a\0bc"' or %constant, or for a default argument used by
+            the wrapper with compactdefaultargs. The characters after the NUL were lost, usually
+            becoming NULs, as in "a\0\0\0".
+
+2026-10-09: wsfulton
+            [C#, Java] #3559 Fix a constant from a string literal holding a character that is not
+            ASCII, with %csconst(1) or %javaconst(1), which was given a char for each byte of its
+            UTF-8 encoding. It now holds the characters that the literal encodes.
+
+2026-10-09: wsfulton
+            [C#] Fix a static member constant initialised by a string or wide character literal
+            with %csconst(1), which was given the C++ escape sequences of the literal, so did not
+            compile for a character that is not printable ASCII or for a wide literal, such as:
+
+              struct S {
+                static constexpr const char *ESC = "\033";
+              };
+
+2026-10-09: wsfulton
+            [C#, D, Java] A constant from a wide string or wide character literal, such as
+            '#define WS L"abc"', with %csconst(1), %dmanifestconst or %javaconst(1), is now read
+            from C/C++, as without the feature, when it is wrapped as a pointer, as it is without
+            typemaps for wchar_t. The literal it was initialised with did not compile.
+
+2026-10-09: wsfulton
+            [D, Java] Fix a constant from a wide string or wide character literal with
+            %dmanifestconst or %javaconst(1) and typemaps giving it a string or character type. It
+            was initialised with the C++ wide literal, such as L"abc", so did not compile.
+
+2026-10-09: wsfulton
+            [R] An object can now be passed for an array of its class, such as a Shape for a
+            'Shape [3]' parameter, as a pointer to the first element, as in the other target
+            languages. Any argument other than NULL for an array of a class gave an R internal
+            error such as "R_ExternalPtrAddr: argument of type S4SXP is not an external pointer".
+
+2026-10-09: wsfulton
+            [R] A vector of more than one value, such as c(6, 7), now gives a SWIG TypeError for a
+            number, bool or enum parameter passed by value or by const reference, such as 'short'
+            or 'const double &', which takes one value. The first value was used. An integer type or
+            an enum passed by value gave the warning "using only the first element". The other types
+            gave no warning.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-09: wsfulton
+            [R] A character vector of more than one string, such as c("ab", "cd"), now gives a SWIG
+            TypeError for a 'char *', char array, 'char' or std::string parameter, which takes one
+            string, rather than the first string being used and the others ignored. An array of
+            strings, such as 'char *[3]', still takes a vector of up to that many strings.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-08: wsfulton
+            [R] A bool returned by reference, such as 'const bool &', or by an OUTPUT or INOUT
+            typemap is now an R logical rather than an integer.
+
+2026-10-08: wsfulton
+            [R] Fix the OUTPUT and INOUT typemaps for a function returning void, which gave the R
+            error "attempt to set index 0/0 in SET_VECTOR_ELT". Also fix the INOUT typemaps for a
+            pointer, such as 'int *INOUT', which crashed. Fix a function returning a class pointer
+            and with OUTPUT or INOUT parameters, which failed to make an object of the returned
+            list. A list is returned holding the return value, if not void, followed by the output
+            values.
+
+2026-10-08: wsfulton
+            [R] A wrapped object of the wrong type passed for a pointer or reference parameter now
+            gives a SWIG TypeError, as in the other target languages. Any pointer was accepted and
+            used as the type of the parameter, so for example passing a 'Foo' for a 'Foo *&'
+            parameter crashed. An object of a class that only another module knows, such as a class
+            derived in a module that %imports this one, is still accepted, as R modules do not share
+            their type information.
+
+2026-10-08: wsfulton
+            [R] NULL and an empty vector, such as integer(0) or character(0), are now told apart,
+            as the R wrappers no longer convert NULL to an empty vector before passing it to C/C++.
+            NULL for a 'const std::vector<T> &' parameter now gives SWIG:NullReferenceError rather
+            than an empty std::vector. NULL for a 'std::vector<T>' passed by value gives a SWIG
+            TypeError. An empty vector is an empty std::vector, an array of zeros for a fixed size
+            array and a pointer to no elements for a pointer to numbers. It gives a SWIG TypeError
+            for a 'char *' string, a char array or a reference. A user scoercein typemap that
+            converts its argument should leave NULL unchanged, as described in the new "NULL and
+            empty vectors" section of the R chapter.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-08: wsfulton
+            [R] Fix reading a fixed size array member or global variable of a numeric or enum type,
+            such as 'int values[4]'. Reading an integer or enum array failed with an R error such
+            as '"_p_int" is not a defined class'. Reading a float or double array gave an R external
+            pointer, which could not be used in R. The array is now read as an R vector of all its
+            elements, of integers, numbers or enum names, which is also what is used to set it. For
+            example, for a struct member 'int values[4]':
+
+              s$values <- c(1L, 2L, 3L, 4L)
+              s$values
+              [1] 1 2 3 4
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-08: wsfulton
+            [R] Fix a fixed size array parameter, member or global variable of a numeric type or an
+            enum, such as 'int [4]', given a vector with fewer elements than the array, which read
+            past the end of the vector. The remaining elements are now 0. A vector with more
+            elements than the array now gives a SWIG OverflowError.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-08: wsfulton
+            [R] Enum names, such as c("One", "Two"), can now be passed for an enum array parameter,
+            such as 'enum Finger [2]', which gave the R internal error "INTEGER() can only be
+            applied to a 'integer', not a 'character'". An integer vector is still accepted.
+
+2026-10-08: wsfulton
+            [R] NULL for a pointer to or an array of a numeric type or an enum, such as 'int *',
+            'double [3]' or 'int []', is now passed as a NULL pointer, as in the other target
+            languages, rather than as a pointer to a zero length array, or for an array of enums,
+            giving an R internal error.
+
+2026-10-08: wsfulton
+            [R] NULL can now be passed to an overloaded function or method taking a reference to
+            a pointer, such as 'Foo *const &', which gave "cannot find overloaded function".
+
+2026-10-07: olly
+	    [Guile] #3194 The default "procdoc" format is now "plain" (which
+	    works with Guile 1.4.1 and later), and the old "guile-1.4" format
+	    is no longer supported.
+
+2026-10-07: wsfulton
+            [R] NULL for a primitive type, such as int, double or bool, passed by value or by
+            const reference, or for a const reference to an enum, now gives a SWIG TypeError. It
+            crashed for int, long and bool passed by value. It gave an R internal error, such as
+            "REAL() can only be applied to a 'numeric', not a 'NULL'", for float and double passed
+            by value and for a const reference to an enum. Otherwise it gave NA, or true for bool.
+
+2026-10-07: wsfulton
+            [R] NULL for a reference to a primitive or library type, such as 'int &',
+            'std::string &' or 'std::vector<int> &', including the INPUT and INOUT typemaps for a
+            reference, now gives SWIG:NullReferenceError, as for a reference to a class, instead
+            of an R internal error, "R_ExternalPtrAddr: argument of type INTSXP is not an external
+            pointer" in R 4.5. A number for the INPUT and INOUT typemaps for a reference, such as
+            'int &INPUT', which gave the same R error, is now accepted.
+
+2026-10-07: wsfulton
+            [Tcl] A negative number, such as -1, is no longer accepted for an unsigned long long
+            parameter or variable, where it gave a very large number. An OverflowError is raised
+            instead. Nor is a negative number with spaces before it, such as " -1", for an unsigned
+            long. An unsigned long value too big for a long is now accepted in any form Tcl accepts
+            for an integer, such as with spaces after it, as for a smaller value.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-07: wsfulton
+            [Perl] A negative number in a string, such as "-1", or a negative floating point number,
+            such as -1.0, is no longer accepted for an unsigned long, unsigned long long or size_t
+            parameter or variable, where it gave a very large number. An OverflowError is raised
+            instead, as it already was for the integer -1.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-07: wsfulton
+            [Perl] An empty string or undef is no longer accepted as 0 for an integer or floating
+            point parameter or variable, such as int or double. A TypeError is raised instead, as it
+            already was for any other string that is not a number. This includes the value returned
+            by a director method implemented in Perl, so a method that returns undef, such as with
+            'return;', for an int now throws Swig::DirectorTypeMismatchException instead of giving 0.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-07: wsfulton
+            [R] Fix the reverse order '(size_t LENGTH, const char *STRING)' typemaps. Also fix the
+            '(const char *STRING, size_t LENGTH)' typemaps when applied to another char type, such
+            as 'unsigned char *'. Both converted the string to an integer, so a string could not be
+            passed.
+
+2026-10-07: wsfulton
+            [Javascript, Octave, Perl, Python, Ruby] Fix NULL, such as None in Python, passed for
+            a string with a length from the '(const char *STRING, size_t LENGTH)' typemaps, the
+            reverse order '(size_t LENGTH, const char *STRING)' typemaps or %cstring_input_binary.
+            The NULL pointer was given a length of -1, converted to the length's type, so a size_t
+            length was its largest value. The length is now 0.
+
+2026-10-07: wsfulton
+            [C#] Fix a constant from a wide string or wide character literal holding a character
+            that is not ASCII, with %csconst(1), which was given a C# char for each byte of its
+            UTF-8 encoding, so that a wide character constant did not compile.
+
+2026-10-07: wsfulton
+            Fix the value of a wide string literal holding a character that is not ASCII, such as
+            L"\x263A", L"\u00E9" or the character written as itself, used for a constant or
+            default argument. A hexadecimal escape sequence above 0xFF was truncated to a single
+            byte, including one beyond Unicode, such as L"\x110000", which a 32 bit wchar_t holds.
+            An octal one above \377 gave an "octal escape sequence out of range" error. Any other
+            such character became a wide character for each byte of its UTF-8 encoding. Also fix
+            the array size deduced for an auto or decltype(auto) variable initialised by such a
+            literal, such as 'auto &s = L"\u00E9";', which counted the UTF-8 bytes.
+
+2026-10-07: wsfulton
+            [Guile] A char, signed char or unsigned char parameter or variable, including the
+            elements of a list or vector from list-vector.i, now raises wrong-type-arg for
+            anything other than a character, such as #nil, a number or a string, which was
+            converted to an arbitrary char. It raises out-of-range for a character above 255, which
+            was truncated.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-07: wsfulton
+            [R] NULL is now accepted for a 'char *' parameter, member or global variable and gives
+            a NULL pointer. NULL for a char parameter gives a SWIG TypeError. Both gave the R
+            internal error "CHAR() can only be applied to a 'CHARSXP', not a 'NULL'" before. An
+            overload taking 'char *' is now selected for NULL. Errors for NULL, such as an invalid
+            null reference, are now reported as SWIG:NullReferenceError instead of
+            SWIG:UnknownError.
+
+2026-10-07: wsfulton
+            [R] Fix a parameter that is a fixed size array of strings, such as 'char *strs[3]',
+            which was given the bytes of the first string in place of the array of pointers,
+            usually crashing. A character vector is now converted to the array, with any elements
+            past the end of a shorter vector set to NULL. A longer vector is an error. NULL is
+            passed as a NULL pointer. A member or global variable of this type, which was set the
+            same way, now keeps copies of the strings, as for 'char *'.
+
+2026-10-07: wsfulton
+            [Octave, Perl, Python, Ruby] Fix a crash when C++ calls a director method that has a
+            char or wchar_t array parameter, such as 'char [4]', with NULL. The target language
+            method is now passed what it is passed for a NULL 'char *'.
+
+2026-10-06: wsfulton
+            [C#, D, Java, Javascript, Lua, OCaml, Octave, Perl, PHP, Python, Ruby]
+            Setting a char array member or global variable, such as 'char [8]', to NULL, such as
+            None in Python, now raises an error, as there is nothing to copy. Previously the array
+            was zero filled, or only its first char was cleared in some target languages.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-06: wsfulton
+            [Javascript, Octave, Perl, PHP, Python, Ruby] NULL, such as None in Python, for a fixed
+            size char array parameter, such as 'char [8]', is now passed on as a NULL pointer, as
+            for any other array parameter, instead of as a zero filled array. In PHP NULL is also
+            passed on for a 'char []' parameter, which was given an empty string.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-06: wsfulton
+            [Javascript] Fix a crash with Node-API for a NULL 'char *' result, such as a function
+            returning NULL. It now gives undefined, as with the other Javascript engines.
+
+2026-10-06: wsfulton
+            [Javascript, Octave, Perl, Python, Ruby] NULL, such as None in Python, is no longer
+            accepted for a char parameter, which was converted to '\0'. So with overloads for both
+            char and 'const char *', NULL now calls the 'const char *' overload.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-06: wsfulton
+            [Lua] Fix a crash when nil is passed for a char or 'const char &' parameter. An error
+            is now raised instead.
+
+2026-10-06: wsfulton
+            [R] NULL for a char array parameter, such as 'char [8]' or 'char []', is now passed on
+            as a NULL pointer, as for any other array parameter, instead of giving an R error. NULL
+            set on a char array member or global variable now gives a SWIG NullReferenceError
+            instead of the R internal error "CHAR() can only be applied to a 'CHARSXP', not a
+            'NULL'".
+
+2026-10-06: wsfulton
+            [C] When wrapping C++, setting a char array member or global variable, such as
+            'char [8]', to NULL now calls SWIG_exception with SWIG_NullReferenceError, which raises
+            a SWIG_CException, as there is nothing to copy. Previously only its first char was
+            cleared.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-06: wsfulton
+            Typemap code that is just "pass" is deprecated and now gives warning 128. Support
+            for it will be removed in a future release.
+
+2026-10-05: wsfulton
+            [R] Fix reading a char array variable or member, such as 'char [4]' or 'char []', or
+            a reference to a char array returned from a function, which failed with an error such
+            as 'undefined class "_p_char"'. The string is now returned, as for 'char *'.
+
+2026-10-05: wsfulton
+            [Perl] Setting a global variable to a value that cannot be converted to its type,
+            such as a string too long for a fixed size char array, now dies with the error, as
+            for a function argument, instead of silently leaving the variable unchanged.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [Scilab] Fix reading a fixed size char array holding as many chars as it has
+            elements, so with no NUL terminator, such as a char[4] member set to "abcd" in C,
+            which read past the end of the array. The string read is now limited to the array
+            size, as with the other target languages.
+
+2026-10-05: wsfulton
+            [Octave, Perl, PHP, Python, Ruby] A director method parameter that is a reference to
+            a char array, such as 'char (&)[4]', is now passed to the target language as a string,
+            as for the other target languages, instead of as a pointer. In PHP this also applies to
+            a fixed size char array, such as 'char [4]'.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [D, Go, OCaml] Fix the wrappers for a director method with a char array parameter,
+            such as 'char [4]', 'char []' or 'char (&)[4]', which did not compile. In OCaml this
+            also fixes a director method with a 'char *' parameter.
+
+2026-10-05: wsfulton
+            [C#, Go, Java] Fix a director method with a fixed size char array parameter, such as
+            'char [4]', or a reference to one, reading past the end of an array passed from C++
+            holding as many chars as it has elements, so with no NUL terminator. The string
+            passed to the target language is now limited to the array size.
+
+2026-10-05: wsfulton
+            [C, C#, D, Go, Guile, Java, Lua, OCaml, PHP, R]
+            A char array variable or member of unknown size is now read only, giving warning 462,
+            as there is no size to bound a copy into it, for example:
+
+              char name[] = "abc";
+              struct Message {
+                int len;
+                char text[];
+              };
+
+            Setting it used strcpy, writing past the end of the array for a longer string.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [Octave, Perl, Python, Ruby, Scilab, Tcl] #1699
+            Fix the wrapper for a char array member of unknown size, such as a flexible array
+            member, which did not compile. The member is now read only, giving warning 462, as a
+            global variable of this type already was.
+
+2026-10-05: wsfulton
+            A typemap for a fixed size array, such as 'int [ANY]', is no longer used for an array
+            of unknown size, such as 'int []'. An [ANY] typemap can rely on the array size, such as
+            by using $1_dim0, which was empty, so the code generated did not compile. A typemap
+            that does not need the size can be copied for the array of unknown size, for example:
+
+              %typemap(in) int [] = int [ANY];
+
+            Such copies have been added for the SWIG library typemaps that do not need the size.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [R] A parameter that is an array of strings of unknown size, such as 'char *argv[]',
+            is now passed as a pointer, as for other arrays of unknown size. It previously used
+            the 'char *[ANY]' typemap, which passed a copy of the first string in place of the array.
+
+2026-10-05: wsfulton
+            [Javascript, Octave, Perl, PHP, Python, Ruby] A NULL argument, such as None in
+            Python, for a parameter that is a reference to a char array, or NULL assigned to a
+            variable or member of that type, is now an error, as a reference cannot be NULL,
+            instead of being converted to an empty string:
+
+              int length_of(const char (&text)[8]);
+
+            The error is the one given for a NULL reference of any other type, such as a
+            TypeError in Python and PHP and a NullReferenceError in Ruby. The other target
+            languages already reject NULL for such a parameter: an ArgumentNullException in C#,
+            an Exception in D, wrong-type-arg in Guile, a NullPointerException in Java, a Lua
+            error, Invalid_argument in OCaml and a TypeError in R and Scilab.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [C, C#, D, Go, Guile, Java, Lua, OCaml, PHP]
+            Fix setting a char[1] member or global variable to a one char string, which stored
+            an empty string. The char is now stored, as for the other target languages, a char[1]
+            having no room for a NUL terminator.
+
+2026-10-05: wsfulton
+            [OCaml] signed char and unsigned char arrays are now wrapped as the other integer arrays
+            are and as in the other target languages, instead of as strings: as a pointer to the
+            first element by default, or as an OCaml array with the carray.i typemaps, which now
+            include them. As strings, a function reading a whole fixed size array read past the end
+            of a shorter string. A global variable was set with strcpy, writing past the end of the
+            array for a long string. To wrap them as strings as before, apply the char array
+            typemaps:
+
+              %apply char [ANY] { signed char [ANY], unsigned char [ANY] }
+
+            A NULL argument for a reference to a char array, such as 'char (&)[8]', now raises
+            Invalid_argument instead of crashing.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [Guile] Setting a fixed size char array global variable to a string that does not fit
+            along with its NUL terminator is now an error, as for a parameter or member variable,
+            instead of the string being silently truncated.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [C#, D, Go, Guile, Java, Lua, OCaml]
+            Fix reading a fixed size char array holding as many chars as it has elements, so with
+            no NUL terminator, such as a char[4] member set to "abcd" in C, which read past the
+            end of the array. The string read is now limited to the array size, as with the other
+            target languages.
+
+2026-10-05: wsfulton
+            [Javascript] With JavaScriptCore, reading a fixed size char array holding as many
+            chars as it has elements, so with no NUL terminator, such as a char[4] member set to
+            "abcd" in C, read past the end of the array. The string read is now limited to the
+            array size, as with the other Javascript engines.
+
+2026-10-05: wsfulton
+            [Scilab] A string passed or assigned to a fixed size char array parameter, member or
+            global variable that does not fit along with its NUL terminator is now an error. It
+            was silently truncated before. A string with as many chars as the array, such as a 16
+            char string for a char[16], was copied in without a NUL terminator, so reading the array
+            as a string read past its end.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [Javascript] With JavaScriptCore, a string with as many chars as a fixed size char
+            array, such as a 16 char string for a char[16] parameter, member or global variable,
+            was copied into the array without a NUL terminator, so reading the array as a string
+            read past its end. Such a string is now an error, as it is with the other Javascript
+            engines.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
+2026-10-05: wsfulton
+            [C#, D, Go, Java, Lua, OCaml, PHP, R] Fix a function with a fixed size char array
+            parameter reading past the end of the string passed to it, such as:
+
+              void set_name(char name[16]);
+              void set_name_ref(char (&name)[16]);
+
+            The function was given a buffer only as long as the string, so reading or writing
+            all 16 chars went past its end. The string is now copied into a 16 char array with
+            the unused chars zero filled, as is already done for Python, Perl, Ruby, Tcl and
+            others. In D, Lua, OCaml and PHP, changes the function makes to the array also no
+            longer alter the target language string passed in.
+
+            A string that does not fit along with its NUL terminator is now an error: an
+            IllegalArgumentException in Java, ArgumentException in C#, Exception in D,
+            ValueError in PHP, Invalid_argument in OCaml, a panic in Go and a Lua or R error. This
+            includes setting a fixed size char array member or global variable, which silently
+            truncated an overlong string before, except that R stored the first chars without a NUL
+            terminator and OCaml wrote past the end of a global. In R, setting one to a shorter
+            string also no longer copies the memory after the end of the string. The wrapper now uses
+            the array size, so a size that is a constant it cannot access, such as a private class
+            enum, no longer compiles, as for the other target languages.
+
+            *** POTENTIAL INCOMPATIBILITY ***
+
 2026-10-04: wsfulton
             Fix a named non-type template parameter of class type introduced with the 'struct',
             'union' or 'class' keyword, which was taken to be a type parameter constrained by a
@@ -1418,6 +2842,13 @@ Version 4.6.0 (in progress)
             are not type hints and are never type checked, so code that exists solely for a
             type checker has no purpose in them. A stub with no annotations at all, from -pyi
             used without -typehints, still declares all three.
+
+2026-09-05: vadz
+            [C] #3552 Fix wrapping functions taking or returning bool by const reference.
+            This parameter type wasn't handled correctly before and resulted in a crash.
+            bool now uses the same typemaps as the other primitive types, which also fixes
+            the invalid declarations generated for bool arrays and maps "const bool *" to
+            "const bool *", and not "bool *", in the wrappers, as for the other types.
 
 2026-08-31: wsfulton
             [Python] #3528 A .pyi stub file is now generated for the low-level C/C++ module when

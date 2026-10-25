@@ -861,7 +861,7 @@ public:
                "            set(self, name, value)\n",
                "        elif name == \"thisown\":\n",
                "            self.this.own(value)\n",
-               "        elif hasattr(self, name) and isinstance(getattr(type(self), name), property):\n",
+               "        elif isinstance(getattr(type(self), name, None), property):\n",
                "            set(self, name, value)\n",
                "        else:\n",
                "            raise AttributeError(\"You cannot add instance attributes to %s\" % self)\n",
@@ -3496,7 +3496,7 @@ public:
       String *protoTypes = NewString("");
       do {
         String *fulldecl = Swig_name_decl(sibl);
-        Printf(protoTypes, "\n\"    %s\\n\"", fulldecl);
+        Printf(protoTypes, "\n\"    %(escape)s\\n\"", fulldecl);
         Delete(fulldecl);
       } while ((sibl = Getattr(sibl, "sym:nextSibling")));
       Append(f->code, "fail:\n");
@@ -3670,7 +3670,7 @@ public:
     emit_parameter_variables(l, f);
 
     /* Attach the standard typemaps */
-    emit_attach_parmmaps(l, f);
+    emit_attach_parm_typemaps(l, f);
     Setattr(n, "wrap:parms", l);
     /* Get number of required and total arguments */
     tuple_arguments = num_arguments = emit_num_arguments(l);
@@ -3764,9 +3764,7 @@ public:
     int use_parse = 0;
     Append(kwargs, "{");
     for (i = 0, p = l; i < num_arguments; i++) {
-      while (checkAttribute(p, "tmap:in:numinputs", "0")) {
-        p = Getattr(p, "tmap:in:next");
-      }
+      p = emit_ignored_in_typemaps(p, get_pointers);
 
       SwigType *pt = Getattr(p, "type");
       String *ln = Getattr(p, "lname");
@@ -3855,6 +3853,7 @@ public:
         break;
       }
     }
+    p = emit_ignored_in_typemaps(p, get_pointers);
 
     /* finish argument marshalling */
     Append(kwargs, " NULL }");
@@ -6405,6 +6404,7 @@ public:
   void printClassHeader(Node *n, String *class_name, String *f_dest, bool addMetaclass) {
     /* Handle inheritance */
     String *base_class = NewString("");
+    bool has_nondynamic_base = false;
     List *baselist = Getattr(n, "bases");
     if (baselist && Len(baselist)) {
       Iterator b;
@@ -6425,6 +6425,8 @@ public:
           continue;
         }
         Printv(base_class, bname, NIL);
+        if (GetFlag(b.item, "feature:python:nondynamic"))
+          has_nondynamic_base = true;
         b = Next(b);
         if (b.item) {
           Printv(base_class, ", ", NIL);
@@ -6440,7 +6442,10 @@ public:
       Printv(base_class, abcs, NIL);
     }
 
-    String *metaclass = (addMetaclass && GetFlag(n, "feature:python:nondynamic")) ? NewString(", metaclass=_SwigNonDynamicMeta") : NewString("");
+    /* A class deriving from a nondynamic class inherits its metaclass, which must not be given explicitly: each module defines its own
+     * _SwigNonDynamicMeta and the one of a base class from another module would conflict with the one of this module. */
+    bool needs_metaclass = addMetaclass && GetFlag(n, "feature:python:nondynamic") && !has_nondynamic_base;
+    String *metaclass = needs_metaclass ? NewString(", metaclass=_SwigNonDynamicMeta") : NewString("");
     Printv(f_dest, "class ", class_name, NIL);
 
     if (Len(base_class)) {

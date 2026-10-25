@@ -3507,7 +3507,7 @@ TypeError: Type error. Expected _p_a_4__double
 
 <p>
 The problem here is that there is no easy way to construct and manipulate a suitable
-<tt>double [4][4]</tt> value to use.   To fix this, you can write some extra C helper
+<tt>double[4][4]</tt> value to use.   To fix this, you can write some extra C helper
 functions.  Just use the <tt>%inline</tt> directive. For example:
 </p>
 
@@ -4107,8 +4107,8 @@ This macro should always be called after setting a Python error in code snippets
 </p>
 
 <p>
-The language-independent <tt>exception.i</tt> library file can also be used
-to raise exceptions.  See the <a href="Library.html#Library">SWIG Library</a> chapter.
+The language independent <tt>SWIG_exception()</tt> function can also be used
+to raise exceptions.  See <a href="Customization.html#Customization_nn7">Using The SWIG exception library</a>.
 </p>
 
 <H3><a name="Python_optimization">35.6.5 Optimization options</a></H3>
@@ -5643,7 +5643,7 @@ static int convert_darray(PyObject *input, double *ptr, int size) {
 }
 %}
 
-%typemap(in) double [ANY](double temp[$1_dim0]) {
+%typemap(in) double[ANY] (double temp[$1_dim0]) {
   if (!convert_darray($input, temp, $1_dim0)) {
     SWIG_fail;
   }
@@ -5700,7 +5700,7 @@ is usually accessed as follows:
 <pre>
 Foo *f;
 if (!SWIG_IsOK(SWIG_ConvertPtr($input, (void **) &amp;f, SWIGTYPE_p_Foo, 0))) {
-  SWIG_exception_fail(SWIG_TypeError, "in method '$symname', expecting type Foo");
+  SWIG_exception(SWIG_TypeError, "in method '$symname', expecting type Foo");
 }
 
 PyObject *obj;
@@ -5717,7 +5717,7 @@ variable <tt>$1_descriptor</tt>.  For example:
 <pre>
 %typemap(in) Foo * {
   if (!SWIG_IsOK(SWIG_ConvertPtr($input, (void **) &amp;$1, $1_descriptor, 0))) {
-    SWIG_exception_fail(SWIG_TypeError, "in method '$symname', expecting type Foo");
+    SWIG_exception(SWIG_TypeError, "in method '$symname', expecting type Foo");
   }
 }
 </pre>
@@ -5732,7 +5732,7 @@ For example:
 <pre>
 %typemap(in) Foo * {
   if (!SWIG_IsOK(SWIG_ConvertPtr($input, (void **) &amp;$1, $descriptor(Foo *), 0))) {
-    SWIG_exception_fail(SWIG_TypeError, "in method '$symname', expecting type Foo");
+    SWIG_exception(SWIG_TypeError, "in method '$symname', expecting type Foo");
   }
 }
 </pre>

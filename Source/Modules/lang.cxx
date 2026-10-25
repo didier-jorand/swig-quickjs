@@ -619,6 +619,7 @@ int Language::constantDirective(Node *n) {
   }
   if (Getattr(n, "feature:exceptvar")) {
     Setattr(n, "feature:except", Getattr(n, "feature:exceptvar"));
+    Setattr(n, "feature:except:canthrow", Getattr(n, "feature:exceptvar:canthrow"));
   }
 
   if (!ImportMode) {
@@ -751,6 +752,10 @@ argout,ret,except), replace $source by $1 and $target by $result.  See the file\
 Doc/Manual/Typemaps.html for complete details.\n");
       nameerror = 1;
     }
+  }
+
+  if (code && Strcmp(code, "pass") == 0) {
+    Swig_warning(WARN_DEPRECATED_TYPEMAP_PASS, Getfile(n), Getline(n), "Typemap code \"pass\" is deprecated.\n");
   }
 
   if (Strcmp(method, "except") == 0) {
@@ -1446,6 +1451,7 @@ int Language::variableHandler(Node *n) {
     }
     if (Getattr(n, "feature:exceptvar")) {
       Setattr(n, "feature:except", Getattr(n, "feature:exceptvar"));
+      Setattr(n, "feature:except:canthrow", Getattr(n, "feature:exceptvar:canthrow"));
     }
   }
 
@@ -1532,6 +1538,11 @@ int Language::membervariableHandler(Node *n) {
         // otherwise qualification is done on the parameter name for the setter function
         Parm *nin = NewParm(type, name, n);
         tm = Swig_typemap_lookup("memberin", nin, target, 0);
+        // Keep the typemap attributes, such as canthrow, for the setter, as for the globalin typemap of a global variable
+        for (Iterator ki = First(nin); ki.key; ki = Next(ki)) {
+          if (Strncmp(ki.key, "tmap:memberin:", 14) == 0)
+            Setattr(n, ki.key, ki.item);
+        }
         Delete(nin);
       }
 
@@ -1545,10 +1556,12 @@ int Language::membervariableHandler(Node *n) {
         /* Check for a member in typemap here */
 
         if (!tm) {
-          if (SwigType_isarray(type)) {
+          SwigType *vartype = SwigType_remove_reference(Copy(type));
+          if (SwigType_isarray(vartype)) {
             Swig_warning(WARN_TYPEMAP_VARIN_UNDEF, input_file, line_number, "Unable to set variable of type %s.\n", SwigType_str(type, 0));
             make_set_wrapper = 0;
           }
+          Delete(vartype);
         } else {
           String *pname0 = Swig_cparm_name(0, 0);
           String *pname1 = Swig_cparm_name(0, 1);
@@ -1819,6 +1832,7 @@ int Language::memberconstantHandler(Node *n) {
   }
   if (Getattr(n, "feature:exceptvar")) {
     Setattr(n, "feature:except", Getattr(n, "feature:exceptvar"));
+    Setattr(n, "feature:except:canthrow", Getattr(n, "feature:exceptvar:canthrow"));
   }
 
   String *enumvalue_symname = Getattr(n, "enumvalueDeclaration:sym:name");  // Only set if a strongly typed enum
@@ -3042,10 +3056,12 @@ int Language::variableWrapper(Node *n) {
     Delete(sname);
 
     if (!tm) {
-      if (SwigType_isarray(type)) {
+      SwigType *vartype = SwigType_remove_reference(Copy(type));
+      if (SwigType_isarray(vartype)) {
         Swig_warning(WARN_TYPEMAP_VARIN_UNDEF, input_file, line_number, "Unable to set variable of type %s.\n", SwigType_str(type, 0));
         make_set_wrapper = 0;
       }
+      Delete(vartype);
     } else {
       String *pname0 = Swig_cparm_name(0, 0);
       Replace(tm, "$input", pname0, DOH_REPLACE_ANY);

@@ -159,7 +159,7 @@
 
 
 %include <typemaps/fragments.swg>
-%include <typemaps/exception.swg>
+%include <swigcommon.swg>
 %include <typemaps/swigtype.swg>
 %include <typemaps/void.swg>
 %include <typemaps/swigobject.swg>

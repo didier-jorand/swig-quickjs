@@ -34,15 +34,25 @@
   int length;
   JSValue array;
 
-  if (!JS_IsArray(ctx, $input)) {
-    SWIG_exception_fail(SWIG_ERROR, "input is not an array");
-  }
-  array = $input;
-  length = ANYLENGTH;
-  $1  = ($*1_ltype *)js_malloc(ctx, sizeof($*1_ltype) * length);
+  if (JS_IsArray(ctx, $input)) {
+    array = $input;
+    length = ANYLENGTH;
 
-  /* Get each element from array */
-  for (i = 0; i < length; i++) {
+    if (length < 0)
+    {
+      SWIG_exception_fail(SWIG_ValueError, "Invalid size for $input");
+    }
+    if (length > (int)SWIG_QuickJS_ArrayLength(ctx, array))
+    {
+      SWIG_exception_fail(SWIG_ValueError, "$input has too few elements");
+    }
+    $1  = ($*1_ltype *)js_malloc(ctx, sizeof($*1_ltype) * length);
+    if (!$1 && length > 0)
+    {
+      SWIG_exception_fail(SWIG_MemoryError, "Failed to allocate memory for $input");
+    }
+    /* Get each element from array */
+    for (i = 0; i < length; i++) {
     JSValue jsvalue = JS_GetPropertyUint32(ctx, array, i);
     $*1_ltype temp;
 
@@ -53,6 +63,11 @@
     }
     arg$argnum[i] = temp;
     JS_FreeValue(ctx, jsvalue);
+    }
+  } else if (JS_IsNull($input)) {
+    $1 = 0;
+  } else {
+    SWIG_exception_fail(SWIG_ERROR, "$input is not an array");
   }
 }
 
@@ -82,8 +97,10 @@
 
 JAVASCRIPT_ARRAYS_IN_DECL("SWIG_GetIntProperty", int, , SWIG_ArrayLength(array))
 JAVASCRIPT_ARRAYS_IN_DECL("SWIG_GetIntProperty", int, ANY, $1_dim0)
+%apply int[ANY] { int[*] };
 JAVASCRIPT_ARRAYS_IN_DECL("SWIG_GetNumberProperty", double, , SWIG_ArrayLength(array))
 JAVASCRIPT_ARRAYS_IN_DECL("SWIG_GetNumberProperty", double, ANY, $1_dim0)
+%apply double[ANY] { double[*] };
 
 JAVASCRIPT_ARRAYS_OUT_DECL("SWIG_OutInt", int)
 JAVASCRIPT_ARRAYS_OUT_DECL("SWIG_OutNumber", double)

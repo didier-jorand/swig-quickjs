@@ -1,5 +1,5 @@
 import arrayref
-from swig_test_utils import swig_check
+from swig_test_utils import swig_check, swig_assert_raises
 
 # A global variable that is a reference to an array reads as the array it refers to.
 swig_check(arrayref.cvar.numbers_ref, arrayref.cvar.numbers)
@@ -18,6 +18,13 @@ swig_check(arrayref.letters_are(), "xy")
 # So is an argument that is a reference to an array of char.
 swig_check(arrayref.length_of("abc"), 3)
 swig_check(arrayref.length_of_writable("xy"), 2)
+# It cannot be None, as a reference cannot be bound to null.
+with swig_assert_raises(TypeError):
+    arrayref.length_of(None)
+with swig_assert_raises(TypeError):
+    arrayref.length_of_writable(None)
+with swig_assert_raises(TypeError):
+    arrayref.cvar.letters_ref = None
 
 # A reference to an array of const is read only.
 swig_check(arrayref.cvar.frozen_ref, "xyz")
@@ -31,6 +38,9 @@ swig_check(member.sum(), 100)
 swig_check(member.text_ref, "hi")
 member.text_ref = "bye"
 swig_check(member.text_is(), "bye")
+
+swig_check(arrayref.char_ref_overload("abc"), 3)
+swig_check(arrayref.char_ref_overload(arrayref.ArrayRefOther()), -1)
 
 # Setting a reference to an array of arrays copies every element.
 arrayref.cvar.grid_ref = arrayref.cvar.other_grid

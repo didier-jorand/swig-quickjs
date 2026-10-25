@@ -937,7 +937,7 @@ public:
     emit_parameter_variables(l, f);
 
     /* Attach the standard typemaps */
-    emit_attach_parmmaps(l, f);
+    emit_attach_parm_typemaps(l, f);
 
     // Parameter overloading
     Setattr(n, "wrap:parms", l);
@@ -960,9 +960,7 @@ public:
     // Now walk the function parameter list and generate code to get arguments
     for (i = 0, p = l; i < num_arguments; i++) {
 
-      while (checkAttribute(p, "tmap:in:numinputs", "0")) {
-        p = Getattr(p, "tmap:in:next");
-      }
+      p = emit_ignored_in_typemaps(p, nondir_args);
 
       SwigType *pt = Getattr(p, "type");
       String *ln = Getattr(p, "lname");
@@ -1024,6 +1022,7 @@ public:
       Delete(c_param_type);
       Delete(arg);
     }
+    p = emit_ignored_in_typemaps(p, nondir_args);
 
     Printv(f->code, nondir_args, NIL);
     Delete(nondir_args);
@@ -1071,7 +1070,7 @@ public:
     // Get any Java exception classes in the throws typemap
     ParmList *throw_parm_list = NULL;
     if ((throw_parm_list = Getattr(n, "catchlist"))) {
-      Swig_typemap_attach_parms("throws", throw_parm_list, f);
+      Swig_typemap_attach_parms("throws", throw_parm_list, 0);
       for (p = throw_parm_list; p; p = nextSibling(p)) {
         if (Getattr(p, "tmap:throws")) {
           addThrows(n, "tmap:throws", p);
@@ -1660,6 +1659,11 @@ public:
       Swig_warning(WARN_JAVA_TYPEMAP_JSTYPE_UNDEF, input_file, line_number, "No jstype typemap defined for %s\n", SwigType_str(t, 0));
     }
 
+    // A literal cannot initialise a constant wrapped as a class, such as a wide string without typemaps for wchar_t *
+    String *stringval = Getattr(n, "stringval");
+    if (stringval && classname_substituted_flag)
+      const_feature_flag = 0;
+
     const String *methodmods = Getattr(n, "feature:java:methodmodifiers");
     methodmods = methodmods ? methodmods : (is_public(n) ? public_string : protected_string);
 
@@ -1700,7 +1704,13 @@ public:
       enum_constant_flag = false;
     } else {
       // Alternative constant handling will use the C syntax to make a true Java constant and hope that it compiles as Java code
-      if (Getattr(n, "wrappedasconstant")) {
+      int type = SwigType_type(t);
+      if (stringval && (type == T_STRING || type == T_WSTRING)) {
+        // Decoded from UTF-8, as JNI decodes a char * string. A wide string has no L prefix in Java
+        Printf(constants_code, "\"%(javaunicodeescape)s\";\n", stringval);
+      } else if (stringval && type == T_WCHAR) {
+        Printf(constants_code, "'%(javaunicodeescape)s';\n", stringval);
+      } else if (Getattr(n, "wrappedasconstant")) {
         Printf(constants_code, "%s;\n", Getattr(n, "staticmembervariableHandler:value"));
       } else {
         Printf(constants_code, "%s;\n", Getattr(n, "value"));

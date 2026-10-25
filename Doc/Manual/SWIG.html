@@ -70,6 +70,11 @@
 <li><a href="#SWIG_nested_structs">Nested structures</a>
 <li><a href="#SWIG_nn39">Other things to note about structure wrapping</a>
 </ul>
+<li><a href="#SWIG_c99">C99 support</a>
+<ul>
+<li><a href="#SWIG_c99_parameter_array_declarators">Static and type qualifiers in parameter array declarators</a>
+<li><a href="#SWIG_c99_variable_length_arrays">Variable length arrays</a>
+</ul>
 <li><a href="#SWIG_nn40">Code Insertion</a>
 <ul>
 <li><a href="#SWIG_nn41">The output of SWIG</a>
@@ -771,6 +776,13 @@ have embedded NULL bytes.  Therefore, the <tt>char *</tt> datatype is
 not generally suitable for passing binary data.  However, it is
 possible to change this behavior by defining a SWIG typemap.  See the chapter
 on <a href="Typemaps.html#Typemaps">Typemaps</a> for details about this.
+</p>
+
+<p>
+NULL is also accepted for a <tt>char *</tt>.
+In a target language that has a null value, such as <tt>None</tt> in Python, the null value is passed as a NULL pointer and a NULL pointer is returned as the null value.
+This includes setting a <tt>char *</tt> member or global variable, which is then set to NULL.
+Arrays of <tt>char</tt> are also handled as strings, see <a href="#SWIG_nn26">Arrays</a>.
 </p>
 
 <p>
@@ -1686,6 +1698,15 @@ void transpose(double (*a)[20]);
 Like C, SWIG does not perform array bounds checking.
 It is up to the
 user to make sure the pointer points to a suitably allocated region of memory.
+As for any other pointer, NULL can be passed for an array parameter.
+</p>
+
+<p>
+The C99 keyword <tt>static</tt> and type qualifiers in the brackets of a parameter's array, such as
+<tt>int a[static 40]</tt>, are accepted and ignored, see
+<a href="#SWIG_c99_parameter_array_declarators">Static and type qualifiers in parameter array declarators</a>.
+A parameter that is a C99 variable length array, such as <tt>int a[n]</tt>, is wrapped as an array of unknown size,
+see <a href="#SWIG_c99_variable_length_arrays">Variable length arrays</a>.
 </p>
 
 <p>
@@ -1695,9 +1716,9 @@ dimension.  For example:
 
 <div class="code">
 <pre>
-int [10];         // Maps to int *
-int [10][20];     // Maps to int (*)[20]
-int [10][20][30]; // Maps to int (*)[20][30]
+int[10];         // Maps to int *
+int[10][20];     // Maps to int (*)[20]
+int[10][20][30]; // Maps to int (*)[20][30]
 </pre>
 </div>
 
@@ -1712,7 +1733,7 @@ section on arrays before using them with SWIG.
 </p>
 
 <p>
-Array variables are supported, but are read-only by default.  For example:
+Array variables are also supported.  For example:
 </p>
 
 <div class="code">
@@ -1723,9 +1744,31 @@ int   a[100][200];
 
 <p>
 In this case, reading the variable 'a' returns a pointer of type <tt>int (*)[200]</tt>
-that points to the first element of the array <tt>&amp;a[0][0]</tt>.  Trying to modify 'a' results
-in an error.  This is because SWIG does not know how to copy data from the target
-language into the array.   To work around this limitation, you may want to write
+that points to the first element of the array <tt>&amp;a[0][0]</tt>.
+Setting 'a' copies all the elements from the array that the given pointer points to, such as one read from another variable of the same type.
+Unlike for an array parameter, NULL is not accepted when setting an array variable, as there is nothing to copy from.
+It is an error, which leaves the variable unchanged.
+An array variable of unknown size is read only, as there is no size to bound the copy.
+SWIG gives warning 462 for such a variable.  For example:
+</p>
+
+<div class="code">
+<pre>
+%module example
+
+extern int b[];
+</pre>
+</div>
+
+<div class="shell">
+<pre>
+$ swig -python example.i
+example.i:3: Warning 462: Unable to set dimensionless array variable
+</pre>
+</div>
+
+<p>
+To read or modify individual elements of an array variable, you may want to write
 a few simple assist functions like this:
 </p>
 
@@ -1764,8 +1807,10 @@ some helper functions in your interface.  For example:
 </div>
 
 <p>
-Arrays of <tt>char</tt> are handled as a special case by SWIG.  In this case, strings in the
-target language can be stored in the array.  For example, if you have a declaration like this,
+Arrays of <tt>char</tt> are handled as a special case by SWIG, as strings in the same way as <tt>char *</tt>.
+A <tt>char</tt> array parameter takes a string from the target language.
+In a target language that has a null value for a string, NULL is passed on as a NULL pointer, as for any other array parameter.
+Strings in the target language can also be stored in a <tt>char</tt> array variable.  For example, if you have a declaration like this,
 </p>
 
 <div class="code">
@@ -1785,6 +1830,7 @@ char *pathname_get() {
   return pathname;
 }
 void pathname_set(char *value) {
+  /* An error is raised instead if value does not fit along with its NUL terminator */
   strncpy(pathname, value, 256);
 }
 </pre>
@@ -1792,6 +1838,19 @@ void pathname_set(char *value) {
 
 <p>
 In the target language, the value can be set like a normal variable.
+A string that does not fit in the array along with its NUL terminator, in this case one longer than 255 characters,
+is an error rather than being truncated.
+Unlike for a <tt>char *</tt> variable, NULL is not accepted when setting a <tt>char</tt> array variable, as there is no string to copy.
+A <tt>char</tt> array variable of unknown size is read only, as for any other array variable.
+</p>
+
+<p>
+In C++, a reference to an array, such as <tt>int (&amp;)[4]</tt>, is handled as a pointer to the array, as for <a href="SWIGPlus.html#SWIGPlus_nn18">other references</a>.
+A reference to a <tt>char</tt> array, such as <tt>char (&amp;)[256]</tt>, is handled as a string.
+A reference cannot be NULL, so unlike for an array parameter, NULL is not accepted for a reference to an array parameter.
+Setting a member or global variable that is a reference to an array copies the elements into the array it refers to, as for an array variable.
+NULL is not accepted for it either.
+A variable that is a reference to an array of unknown size, such as <tt>int (&amp;)[]</tt>, is read only.
 </p>
 
 <H3><a name="SWIG_readonly_variables">5.4.6 Creating read-only variables</a></H3>
@@ -2830,22 +2889,31 @@ perform memory allocation.
 
 
 <p>
-Arrays may appear as the members of structures, but they will be
-read-only. SWIG will write an accessor function that returns the
-pointer to the first element of the array, but will not write a
-function to change the contents of the array itself.
-When this
-situation is detected, SWIG may generate a warning message such as the
-following :</p>
+Arrays may appear as the members of structures and are handled in the same way as
+<a href="#SWIG_nn26">array variables</a>. SWIG writes an accessor function that returns the
+pointer to the first element of the array and one that sets the array by copying all the elements
+from the array that the given pointer points to.
+NULL is not accepted when setting an array member, as there is nothing to copy from.
+A <tt>char</tt> array member is set from a string.
+An array member of unknown size, such as a flexible array member, is read only, as there is no size to bound the copy.
+SWIG gives warning 462 for it.  For example:
+</p>
+
+<div class="code"><pre>
+%module example
+
+struct Buffer {
+  int len;
+  int data[];
+};
+</pre></div>
 
 <div class="shell"><pre>
-interface.i:116. Warning. Array member will be read-only
+example.i:5: Warning 462: Unable to set variable of type int [].
 </pre></div>
 
 <p>
-To eliminate the warning message, typemaps can be used, but this is
-discussed in a later chapter.  In many cases, the warning message is
-harmless.
+In many cases, the warning message is harmless and can be <a href="Warnings.html#Warnings_suppression">suppressed</a>.
 </p>
 
 <H3><a name="SWIG_structure_data_members">5.5.4 Structure data members</a></H3>
@@ -3465,7 +3533,245 @@ interface described here, most of SWIG's language modules use it in
 some way or another.
 </p>
 
-<H2><a name="SWIG_nn40">5.6 Code Insertion</a></H2>
+<H2><a name="SWIG_c99">5.6 C99 support</a></H2>
+
+
+<p>
+This section covers how SWIG handles some of the features added to C by the C99 standard.
+</p>
+
+<H3><a name="SWIG_c99_parameter_array_declarators">5.6.1 Static and type qualifiers in parameter array declarators</a></H3>
+
+
+<p>
+C99 allows the keyword <tt>static</tt> and the type qualifiers <tt>const</tt>, <tt>volatile</tt> and <tt>restrict</tt>
+in the brackets of the outermost array of a function parameter.
+<tt>static</tt> promises that the argument points to at least as many elements as the size gives.
+A type qualifier applies to the pointer that the parameter is adjusted to:
+</p>
+
+<div class="code">
+<pre>
+double average(const double values[static 3]);
+void clear(int buffer[const 10]);
+void scale(double factor, double values[static restrict 4]);
+</pre>
+</div>
+
+<p>
+Neither changes the type of the function, so SWIG parses and then ignores <tt>static</tt> and the type qualifiers.
+The declarations above are wrapped exactly as if they had been written as follows, with the arrays handled as
+pointers as described in the <a href="#SWIG_nn26">Arrays</a> section:
+</p>
+
+<div class="code">
+<pre>
+double average(const double values[3]);
+void clear(int buffer[10]);
+void scale(double factor, double values[4]);
+</pre>
+</div>
+
+<p>
+<b>Compatibility note:</b> SWIG-4.6.0 is the first version to parse <tt>static</tt> and type qualifiers in the
+brackets of a parameter's array.
+Earlier versions reported a syntax error, except for <tt>restrict</tt>, which was already ignored when parsing C.
+</p>
+
+<H3><a name="SWIG_c99_variable_length_arrays">5.6.2 Variable length arrays</a></H3>
+
+
+<p>
+C99 added variable length arrays.
+An array has a <i>variable length array type</i> when its size is not an integer constant expression, so that the
+size is only known at runtime.
+For a function parameter, the size is usually another parameter that comes earlier in the parameter list:
+</p>
+
+<div class="code">
+<pre>
+double sum(size_t n, const double values[n]);
+void fill(size_t rows, size_t cols, double matrix[rows][cols]);
+</pre>
+</div>
+
+<p>
+In a function prototype, the size can be given as <tt>*</tt> instead of an expression, as the parameter that holds
+the size need not be named in a prototype.
+C99 calls this a <i>variable length array type of unspecified size</i> and it can only be used in a function
+prototype:
+</p>
+
+<div class="code">
+<pre>
+double sum(size_t, const double[*]);
+void fill(size_t, size_t, double[*][*]);
+</pre>
+</div>
+
+<p>
+A type that contains a variable length array, such as the array of arrays above or a pointer to a variable length
+array, is a <i>variably modified type</i>.
+Only function parameters and the local variables of a function can have a variably modified type.
+A global variable or a structure member cannot have one.
+</p>
+
+<p>
+SWIG reports an error for the array syntax that only a function parameter can have, which is <tt>static</tt> or a
+type qualifier in the brackets or <tt>*</tt> as the size, when it is used for a global variable, a structure member
+or a typedef:
+</p>
+
+<div class="code">
+<pre>
+%module example
+
+struct Buffer {
+  int ids[static 4];
+};
+typedef double row[*];
+</pre>
+</div>
+
+<div class="shell">
+<pre>
+example.i:4: Error: 'static' and type qualifiers in an array declarator are only allowed in a function parameter.
+example.i:6: Error: A variable length array of unspecified size, '[*]', is only allowed in a function prototype.
+</pre>
+</div>
+
+<p>
+A size that is not an integer constant expression, such as the <tt>n</tt> in a global variable declared as
+<tt>int values[n]</tt>, is left for the C compiler to report, as SWIG cannot always tell whether a size is a constant.
+</p>
+
+<p>
+The size of a variable length array is only known when the function is called, so SWIG wraps a parameter of a
+variably modified type as an array of unknown size.
+Any array in the parameter's type whose size refers to an earlier parameter, or whose size is <tt>*</tt>, is wrapped
+as an array without a size.
+Other arrays keep their size, as the table shows for each kind of array parameter:
+</p>
+
+<table summary="Array parameters" border="1" cellpadding="5">
+<tr>
+    <th>Parameter declaration</th><th>Wrapped as</th><th>Kind of array</th>
+</tr>
+<tr>
+    <td><tt>int a[3]</tt></td><td><tt>int a[3]</tt></td><td>Fixed size array</td>
+</tr>
+<tr>
+    <td><tt>int a[]</tt></td><td><tt>int a[]</tt></td><td>Array of unknown size</td>
+</tr>
+<tr>
+    <td><tt>int a[static 3]</tt></td><td><tt>int a[3]</tt></td>
+    <td>Fixed size array, see <a href="#SWIG_c99_parameter_array_declarators">static and type qualifiers</a></td>
+</tr>
+<tr>
+    <td><tt>int n, int a[n]</tt></td><td><tt>int n, int a[]</tt></td><td>Variable length array type</td>
+</tr>
+<tr>
+    <td><tt>int n, int a[static n]</tt></td><td><tt>int n, int a[]</tt></td><td>Variable length array type</td>
+</tr>
+<tr>
+    <td><tt>int a[*]</tt></td><td><tt>int a[]</tt></td><td>Variable length array type of unspecified size</td>
+</tr>
+<tr>
+    <td><tt>int n, double m[n][n]</tt></td><td><tt>int n, double (*m)[]</tt></td><td>Variably modified type</td>
+</tr>
+<tr>
+    <td><tt>int n, int (*p)[n]</tt></td><td><tt>int n, int (*p)[]</tt></td><td>Variably modified type</td>
+</tr>
+<tr>
+    <td><tt>int n, int a[global_n]</tt></td><td><tt>int n, int a[global_n]</tt></td>
+    <td>Fixed size array, as the size does not refer to a parameter</td>
+</tr>
+</table>
+
+<p>
+A size that does not refer to an earlier parameter is kept, even if it is not a constant, such as the global variable
+in the following:
+</p>
+
+<div class="code">
+<pre>
+int global_n = 5;
+int sum_global(int n, const int values[global_n]);
+</pre>
+</div>
+
+<p>
+SWIG cannot always tell whether a size is a constant, so <tt>values</tt> is wrapped as a fixed size array.
+</p>
+
+<p>
+The typemaps used for a variable length array parameter, including those that SWIG provides and ones that use the size
+the array has at runtime, are described in
+<a href="Typemaps.html#Typemaps_variable_length_arrays">Typemaps for variable length arrays</a>.
+</p>
+
+<p>
+A function can be declared more than once in C, such as in a prototype written with <tt>*</tt> as the size and then
+in one that gives the size:
+</p>
+
+<div class="code">
+<pre>
+%module example
+
+int total(int, const int[*]);
+int total(int n, const int values[n]);
+</pre>
+</div>
+
+<p>
+Both declarations have the same type once the sizes are removed, so SWIG wraps the first and ignores the second as
+redundant, giving warning 322 when run with <tt>-Wall</tt>:
+</p>
+
+<div class="shell">
+<pre>
+example.i:4: Warning 322: Redundant redeclaration of identifier 'total' as total(int,int const []) ignored,
+example.i:3: Warning 322: previous declaration of 'total' as total(int,int const []).
+</pre>
+</div>
+
+<p>
+The size given by the second declaration is still used by the
+<a href="Typemaps.html#Typemaps_variable_length_arrays">typemaps for variable length arrays</a>, so it does not
+matter which declaration comes first.
+</p>
+
+<p>
+<tt>%rename</tt>, <tt>%feature</tt> and the other directives that match a declaration remove the size of a variable
+length array from the parameter list they are given in the same way.
+In that parameter list, an array whose size refers to an earlier parameter, an array whose size is <tt>*</tt> and an
+array without a size are all the same.
+A size that uses the name of a parameter not named in that list, such as the <tt>n</tt> in
+<tt>sum(size_t, const double[n])</tt>, is kept, but it matches the size as declared.
+So each of the following matches <tt>sum</tt> above:
+</p>
+
+<div class="code">
+<pre>
+%rename(sum_doubles) sum(size_t n, const double values[n]);
+%rename(sum_doubles) sum(size_t, const double values[*]);
+%rename(sum_doubles) sum(size_t, const double[]);
+%rename(sum_doubles) sum(size_t, const double[n]);
+</pre>
+</div>
+
+<p>
+<b>Compatibility note:</b> SWIG-4.6.0 is the first version to parse <tt>*</tt> as the size of an array.
+It is also the first to wrap a variable length array parameter with the typemaps written with <tt>*</tt>, or as an
+array of unknown size.
+Earlier versions wrapped it as a fixed size array, giving wrapper code that did not compile for some types, such as
+an array of <tt>char</tt>.
+A typemap written with the size as declared, such as <tt>const double values[n]</tt>, is still used, but its
+<tt>$1_dim0</tt> is now the size worked out at runtime.
+</p>
+
+<H2><a name="SWIG_nn40">5.7 Code Insertion</a></H2>
 
 
 <p>
@@ -3475,7 +3781,7 @@ additional C code to perform initialization or other operations.
 There are four common ways to insert code, but it's useful to know how the
 output of SWIG is structured first.</p>
 
-<H3><a name="SWIG_nn41">5.6.1 The output of SWIG</a></H3>
+<H3><a name="SWIG_nn41">5.7.1 The output of SWIG</a></H3>
 
 
 <p>
@@ -3511,7 +3817,7 @@ the module upon loading.
 </li>
 </ul>
 
-<H3><a name="SWIG_nn42">5.6.2 Code insertion blocks</a></H3>
+<H3><a name="SWIG_nn42">5.7.2 Code insertion blocks</a></H3>
 
 
 <p>
@@ -3617,7 +3923,7 @@ static Vector *new_Vector() {
 Vector *new_Vector();
 </pre></div>
 
-<H3><a name="SWIG_nn43">5.6.3 Inlined code blocks</a></H3>
+<H3><a name="SWIG_nn43">5.7.3 Inlined code blocks</a></H3>
 
 
 <p>
@@ -3665,7 +3971,7 @@ SWIG directives inside a <tt>%{ ... %}</tt> block.</p>
 <b>Note:</b> The usual SWIG C preprocessor rules apply to code in <tt>%apply</tt> blocks when SWIG parses this code. For example, as mentioned earlier, <a href="SWIG.html#SWIG_nn6">SWIG's C Preprocessor</a> does not follow <tt>#include</tt> directives by default.
 </p>
 
-<H3><a name="SWIG_nn44">5.6.4 Initialization blocks</a></H3>
+<H3><a name="SWIG_nn44">5.7.4 Initialization blocks</a></H3>
 
 
 <p>
@@ -3692,7 +3998,7 @@ the necessary initialization for them instead:
 %}
 </pre></div>
 
-<H2><a name="SWIG_nn45">5.7 An Interface Building Strategy</a></H2>
+<H2><a name="SWIG_nn45">5.8 An Interface Building Strategy</a></H2>
 
 
 <p>
@@ -3700,7 +4006,7 @@ This section describes the general approach for building interfaces
 with SWIG. The specifics related to a particular scripting language
 are found in later chapters.</p>
 
-<H3><a name="SWIG_nn46">5.7.1 Preparing a C program for SWIG</a></H3>
+<H3><a name="SWIG_nn46">5.8.1 Preparing a C program for SWIG</a></H3>
 
 
 <p>
@@ -3754,7 +4060,7 @@ to the <a href="https://www.swig.org/mail.html">swig-devel mailing list</a> or t
 <a href="https://www.swig.org/bugs.html">SWIG bug tracker</a>.
 </p>
 
-<H3><a name="SWIG_nn47">5.7.2 The SWIG interface file</a></H3>
+<H3><a name="SWIG_nn47">5.8.2 The SWIG interface file</a></H3>
 
 
 <p>
@@ -3807,7 +4113,7 @@ The main advantage of this approach is minimal maintenance of an interface file 
 In more complex projects, an interface file containing numerous <tt>%include</tt> and <tt>#include</tt> statements like this is one of the most common approaches to interface file design due to lower maintenance overhead.
 </p>
 
-<H3><a name="SWIG_nn48">5.7.3 Why use separate interface files?</a></H3>
+<H3><a name="SWIG_nn48">5.8.3 Why use separate interface files?</a></H3>
 
 
 <p>
@@ -3836,7 +4142,7 @@ and immediately see what is available without having to dig it out of
 header files.
 </ul>
 
-<H3><a name="SWIG_nn49">5.7.4 Getting the right header files</a></H3>
+<H3><a name="SWIG_nn49">5.8.4 Getting the right header files</a></H3>
 
 
 <p>
@@ -3856,7 +4162,7 @@ include certain header files by using a <tt>%{ %}</tt> block like this:
 ...
 </pre></div>
 
-<H3><a name="SWIG_nn50">5.7.5 What to do with main()</a></H3>
+<H3><a name="SWIG_nn50">5.8.5 What to do with main()</a></H3>
 
 
 <p>

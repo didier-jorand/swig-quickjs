@@ -1456,6 +1456,11 @@ double Foo_bar(Foo *obj, double *a) {
 </pre></div>
 
 <p>
+A reference cannot be NULL, so NULL, such as <tt>None</tt> in Python, is not accepted for a reference to a class or an array.
+It gives an error instead of being passed on as a NULL pointer would be.
+</p>
+
+<p>
 As a special case, most language modules pass <tt>const</tt> references to primitive datatypes (<tt>int</tt>, <tt>short</tt>,
 <tt>float</tt>, etc.) by value instead of pointers.  For example, if you have a function like this,
 </p>
@@ -2319,7 +2324,7 @@ Ambiguity problems are known to arise in the following situations:
 <li>Pointers and references. For example, <tt>Foo *</tt> and <tt>Foo &amp;</tt>.
 </li>
 
-<li>Pointers and arrays.  For example, <tt>Foo *</tt> and <tt>Foo [4]</tt>.
+<li>Pointers and arrays.  For example, <tt>Foo *</tt> and <tt>Foo[4]</tt>.
 </li>
 
 <li>Pointers and instances.  For example, <tt>Foo</tt> and <tt>Foo *</tt>.  Note: SWIG converts all
@@ -3350,7 +3355,7 @@ private:
   int maxitems;
 public:
   List(int max) {
-    data = new T [max];
+    data = new T[max];
     nitems = 0;
     maxitems = max;
   }
@@ -3560,6 +3565,30 @@ template&lt;class T&gt; void foo(T x, T y) { };
 This will generate two overloaded wrapper methods, the first will take a single integer as an argument
 and the second will take two integer arguments.
 </p>
+
+<p>
+As in C++, only the overloads whose template parameters take the template arguments are instantiated.
+That is, the arguments must cover each template parameter without a default and each must be the kind
+of argument its parameter takes: a type for a type template parameter, a value for a non-type template parameter
+and a template for a template template parameter.
+A name that SWIG has not seen declared is assumed to be the right kind of argument for any template parameter.
+Likewise, a template parameter with a type that SWIG has not seen declared, such as <tt>std::size_t N</tt> without a
+typedef for <tt>size_t</tt>, takes any kind of argument, as the name could also be a concept constraining a type
+template parameter.
+For example:
+</p>
+
+<div class="code">
+<pre>
+template&lt;class T&gt; int kind() { return 1; }
+template&lt;int N&gt; int kind() { return 2; }
+template&lt;class T, class U&gt; int kind() { return 3; }
+
+%template(kind_int) kind&lt;int&gt;;                 // instantiates the first kind only
+%template(kind_10) kind&lt;10&gt;;                   // instantiates the second kind only
+%template(kind_int_double) kind&lt;int, double&gt;;  // instantiates the third kind only
+</pre>
+</div>
 
 <H3><a name="SWIGPlus_template_classes">6.18.3 Default template arguments</a></H3>
 
@@ -5352,7 +5381,7 @@ public:
 For the <tt>Foo::bar()</tt> method, which can throw anything,
 SWIG will generate catch handlers for <tt>Error1</tt>, <tt>Error2</tt> as well as a catch all handler (...).
 Each catch handler will convert the caught exception and convert it into a target language error/exception.
-The catch all handler will convert the caught exception into an unknown error/exception.
+The catch all handler raises a <tt>SWIG_RuntimeError</tt> error/exception with the message "unknown exception".
 </p>
 
 <p>

@@ -1,4 +1,4 @@
-/* ----------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------
  * This file is part of SWIG, which is licensed as a whole under version 3
  * (or any later version) of the GNU General Public License. Some additional
  * terms also apply to certain portions of SWIG. The full details of the SWIG
@@ -9,7 +9,7 @@
  * perl5.cxx
  *
  * Perl5 language module for SWIG.
- * ------------------------------------------------------------------------- */
+ * ----------------------------------------------------------------------------- */
 
 #include "swigmod.h"
 #include "cparse.h"
@@ -448,8 +448,10 @@ public:
     Printv(magic,
            "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n",
            "#define MAGIC_CLASS\n",
-           "SWIGCLASS_STATIC int swig_magic_readonly(pTHX_ SV *SWIGUNUSEDPARM(sv), MAGIC *SWIGUNUSEDPARM(mg)) {\n",
+           "SWIGCLASS_STATIC int swig_magic_readonly(pTHX_ SV *sv, MAGIC *SWIGUNUSEDPARM(mg)) {\n",
            "  MAGIC_PPERL\n",
+           "  if (SvROK(sv))\n",
+           "    sv_setsv(sv, &PL_sv_undef);\n",
            "  croak(\"Value is read-only.\");\n",
            "  return 0;\n",
            "}\n",
@@ -702,7 +704,7 @@ public:
            NIL);
 
     emit_parameter_variables(l, f);
-    emit_attach_parmmaps(l, f);
+    emit_attach_parm_typemaps(l, f);
     Setattr(n, "wrap:parms", l);
 
     num_arguments = emit_num_arguments(l);
@@ -723,11 +725,7 @@ public:
     /* Write code to extract parameters. */
     for (i = 0, p = l; i < num_arguments; i++) {
 
-      /* Skip ignored arguments */
-
-      while (checkAttribute(p, "tmap:in:numinputs", "0")) {
-        p = Getattr(p, "tmap:in:next");
-      }
+      p = emit_ignored_in_typemaps(p, f->code);
 
       SwigType *pt = Getattr(p, "type");
 
@@ -757,6 +755,7 @@ public:
         Printf(f->code, "    }\n");
       }
     }
+    p = emit_ignored_in_typemaps(p, f->code);
 
     if (varargs) {
       if (p && (tm = Getattr(p, "tmap:in"))) {
@@ -1016,8 +1015,17 @@ public:
         DelWrapper(getf);
         return SWIG_NOWRAP;
       }
+      /* Perl leaves the variable holding the assigned value. When that is a reference, such as to another pointer object
+         for a variable linked as a pointer object, reading the variable would change what it refers to. The variable is
+         left undefined instead, whether the set succeeds or fails, so reading it makes its own value again. */
+      Printf(setf->code, "    if (SvROK(sv))\n");
+      Printf(setf->code, "      sv_setsv(sv, &PL_sv_undef);\n");
+      Printf(setf->code, "    return 1;\n");
       Printf(setf->code, "fail:\n");
-      Printf(setf->code, "    return 1;\n}\n");
+      Printf(setf->code, "    if (SvROK(sv))\n");
+      Printf(setf->code, "      sv_setsv(sv, &PL_sv_undef);\n");
+      Printf(setf->code, "    SWIG_croak_null();\n");
+      Printf(setf->code, "    return 0;\n}\n");
       Replaceall(setf->code, "$symname", iname);
       Wrapper_print(setf, magic);
     }

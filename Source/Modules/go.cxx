@@ -647,6 +647,8 @@ private:
 
     /* Write and cleanup */
 
+    // _swig_gopanic is inserted before the header code, which may use it, and after SWIGUNUSED is defined
+    int c_header_start = Len(f_c_runtime);
     Dump(f_c_header, f_c_runtime);
 
     if (Swig_directors_enabled()) {
@@ -686,14 +688,18 @@ private:
       Printv(f_go_header, "\tpanic(string(s))\n", NULL);
       Printv(f_go_header, "}\n\n", NULL);
 
-      Printv(f_c_begin, "\nextern\n", NULL);
-      Printv(f_c_begin, "#ifdef __cplusplus\n", NULL);
-      Printv(f_c_begin, "  \"C\"\n", NULL);
-      Printv(f_c_begin, "#endif\n", NULL);
-      Printv(f_c_begin, "  void cgo_panic_", unique_id, "(const char*);\n", NULL);
-      Printv(f_c_begin, "static void _swig_gopanic(const char *p) {\n", NULL);
-      Printv(f_c_begin, "  cgo_panic_", unique_id, "(p);\n", NULL);
-      Printv(f_c_begin, "}\n\n", NULL);
+      String *panic_code = NewString("");
+      Printv(panic_code, "\nextern\n", NULL);
+      Printv(panic_code, "#ifdef __cplusplus\n", NULL);
+      Printv(panic_code, "  \"C\"\n", NULL);
+      Printv(panic_code, "#endif\n", NULL);
+      Printv(panic_code, "  void cgo_panic_", unique_id, "(const char*);\n", NULL);
+      // Unused unless SWIG_exception or a throws typemap is used, but the SWIG_exception macro is always defined
+      Printv(panic_code, "static SWIGUNUSED void _swig_gopanic(const char *p) {\n", NULL);
+      Printv(panic_code, "  cgo_panic_", unique_id, "(p);\n", NULL);
+      Printv(panic_code, "}\n\n", NULL);
+      Insert(f_c_runtime, c_header_start, panic_code);
+      Delete(panic_code);
     }
 
     Dump(f_c_runtime, f_c_begin);
@@ -1460,7 +1466,7 @@ private:
     }
 
     emit_parameter_variables(parms, f);
-    emit_attach_parmmaps(parms, f);
+    emit_attach_parm_typemaps(parms, f);
     int parm_count = emit_num_arguments(parms);
     int required_count = emit_num_required(parms);
 
@@ -1526,7 +1532,7 @@ private:
 
     p = parms;
     for (int i = 0; i < parm_count; ++i) {
-      p = getParm(p);
+      p = emit_ignored_in_typemaps(p, f->code);
       String *tm = Getattr(p, "tmap:in");
       if (!tm) {
         Swig_warning(WARN_TYPEMAP_IN_UNDEF, input_file, line_number, "unable to use type %s as a function argument\n", SwigType_str(Getattr(p, "type"), 0));
@@ -1546,6 +1552,7 @@ private:
       }
       p = nextParm(p);
     }
+    p = emit_ignored_in_typemaps(p, f->code);
 
     Printv(f->code, "\n", NULL);
 
@@ -1586,7 +1593,7 @@ private:
 
   Wrapper *initGoTypemaps(ParmList *parms) {
     Wrapper *dummy = NewWrapper();
-    emit_attach_parmmaps(parms, dummy);
+    emit_attach_parm_typemaps(parms, dummy);
 
     Parm *p = parms;
     int parm_count = emit_num_arguments(parms);
@@ -2838,7 +2845,7 @@ private:
     bool is_static = isStatic(n);
 
     Wrapper *dummy = NewWrapper();
-    emit_attach_parmmaps(parms, dummy);
+    emit_attach_parm_typemaps(parms, dummy);
     DelWrapper(dummy);
 
     Swig_typemap_attach_parms("gotype", parms, NULL);
@@ -3302,7 +3309,7 @@ private:
     Setattr(n, "wrap:parms", parms);
 
     Wrapper *dummy = NewWrapper();
-    emit_attach_parmmaps(parms, dummy);
+    emit_attach_parm_typemaps(parms, dummy);
 
     Swig_typemap_attach_parms("gotype", parms, NULL);
     Swig_typemap_attach_parms("imtype", parms, NULL);
@@ -4796,7 +4803,7 @@ private:
     ParmList *parms = Getattr(n, "parms");
     if (parms) {
       Wrapper *dummy = NewWrapper();
-      emit_attach_parmmaps(parms, dummy);
+      emit_attach_parm_typemaps(parms, dummy);
       int parm_count = emit_num_arguments(parms);
       Parm *p = parms;
 

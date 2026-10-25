@@ -135,6 +135,7 @@ CPP_TEST_CASES += \
 	arrays_dimensionless \
 	arrays_global \
 	arrays_global_twodim \
+	arrays_null \
 	arrays_scope \
 	assign_const \
 	assign_reference \
@@ -198,6 +199,7 @@ CPP_TEST_CASES += \
 	director_basic \
 	director_binary_string \
 	director_binary_string_rev_len \
+	director_char_array \
 	director_classes \
 	director_classic \
 	director_constructor \
@@ -324,6 +326,7 @@ CPP_TEST_CASES += \
 	long_long_apply \
 	memberin_extend \
 	member_funcptr_galore \
+	member_immutable_vars \
 	member_pointer \
 	member_pointer_const \
 	member_template \
@@ -458,10 +461,12 @@ CPP_TEST_CASES += \
 	string_constants \
 	struct_initialization_cpp \
 	struct_value \
+	swig_catch_stdexcept \
 	swig_exception \
 	symbol_clash \
 	sym \
 	template_advanced_rename \
+	template_arg_names \
 	template_arg_replace \
 	template_arg_scope \
 	template_arg_typename \
@@ -497,6 +502,7 @@ CPP_TEST_CASES += \
 	template_extend2 \
 	template_extend_overload \
 	template_extend_overload_2 \
+	template_function_overload_kind \
 	template_function_parm \
 	template_forward \
 	template_inherit \
@@ -682,6 +688,7 @@ CPP11_TEST_CASES += \
 	cpp11_rvalue_reference \
 	cpp11_rvalue_reference2 \
 	cpp11_rvalue_reference3 \
+	cpp11_rvalue_reference_array \
 	cpp11_rvalue_reference_move \
 	cpp11_shared_ptr_const \
 	cpp11_shared_ptr_crtp_upcast \
@@ -698,6 +705,7 @@ CPP11_TEST_CASES += \
 	cpp11_thread_local \
 	cpp11_template_double_brackets \
 	cpp11_template_explicit \
+	cpp11_template_function_overload_kind \
 	cpp11_template_pack \
 	cpp11_template_pack_specialization \
 	cpp11_template_parameters_decltype \
@@ -901,6 +909,9 @@ C_TEST_CASES += \
 	c_delete \
 	c_delete_function \
 	c_this_identifier \
+	c99_parameter_array_declarators \
+	c99_vla_array_libraries \
+	c99_vla_typemaps \
 	char_constant \
 	charptr_fragment \
 	command_line_define \
@@ -960,6 +971,7 @@ C_TEST_CASES += \
 	string_simple \
 	struct_rename \
 	struct_initialization \
+	swig_exception_default \
 	typedef_classforward_same_name \
 	typedef_struct \
 	typemap_subst \
