@@ -1,17 +1,20 @@
 ---
 name: swig-conventions
-description: 'SWIG source and contribution conventions: clang-format / code formatting, C/C++ comment style (quotes, widths, function header blocks), parser.y new-code rules, alphabetical ordering of makefile lists, adding or retiring a warning number and checking it is documented, commit message style, hyphenation, CHANGES.current file entries for user visible release notes and AI-assistance disclosure. Read before writing or editing Source/ or Lib/ code, comments, or commit messages.'
+description: 'SWIG source code conventions: clang-format / code formatting, CamelCase names of classes and structs, C/C++ comment style (quotes, widths, function header blocks), parser.y new code rules, alphabetical ordering of makefile lists, adding or retiring a warning number and checking it is documented, hyphenation and CHANGES.current file entries for user visible release notes. Read before writing or editing Source/ or Lib/ code or comments, or a CHANGES.current entry.'
 ---
 
 # SWIG Coding and Contribution Conventions
 
 ## When to use
 - Before writing or editing C/C++ code under `Source/` or `Lib/`
+- Before naming a class, struct or struct typedef under `Source/`
 - Before adding a test case to a makefile list
 - Before writing or rewording a source code comment
 - Before adding new code to `Source/CParse/parser.y`
-- Before writing a commit message
+- Before writing a `CHANGES.current` entry
 - When choosing whether to hyphenate a compound term in code, comments, or docs
+
+Commit messages, the `Assisted-by:` AI disclosure trailer and what to test before committing are in `.agents/skills/swig-contribute/SKILL.md`.
 
 ## Code formatting
 
@@ -22,26 +25,47 @@ make format-inplace   # apply formatting
 
 Format config: `Source/.clang-format` (Google style, 160 column limit).
 
+## Naming
+
+Section 8, "Naming Conventions", of `Doc/Devel/engineering.html` gives the naming conventions for the code in `Source/`:
+a function has its module name and lowercase words separated by underscores, as in `Swig_add_directory()`, a structure
+member is in lowercase too and a structure name is capitalised, as in `typedef struct DohObjInfo { ... } DohObjInfo;`.
+
+The name of a class, struct or struct typedef in `Source/`, in a C or a C++ file, is CamelCase with every word
+capitalised, as in `ScopedPtr`, `CxxFunctionWrapper`, `CPlusPlusOutputGuard` and `ExprVal`, not `scoped_dohptr`,
+`CPlusplusOutputGuard` or `Exprval`. An acronym stays in capitals, as in `JSCEmitter` and `PHPTypes`. The classes of the
+language modules are named after their language, as in `PYTHON` and `CSHARP`. A struct tag has the name of its typedef,
+as in `typedef struct Pool { ... } Pool;`. Variables, functions and struct members keep their own styles, even when
+they use the same words as a type, such as the variable `literal_tokens` of the struct type `LiteralToken`.
+
 ## Comment style
 
-In source code comments under `Source/` and `Lib/`, prefer single quotes (`'`) or double quotes (`"`) when quoting a token, identifier, keyword or short type such as `'char [*]'`. Do not use backticks (`` ` ``) - they are a Markdown convention and have no meaning in C/C++ comments. For example, write `'requires' keyword`, not the backtick wrapped form.
+In source code comments under `Source/` and `Lib/`, prefer single quotes (`'`) or double quotes (`"`) when quoting a
+token, keyword, short type or other code such as `'char [*]'`. Do not use backticks (`` ` ``) - they are a Markdown
+convention and have no meaning in C/C++ comments. For example, write `'requires' keyword`, not the backtick wrapped
+form.
+
+Do not quote the name of a variable, parameter, struct member or function in the code being described. Write it as it
+is, as in `Returns the function type, t, constructed from the parameters, parms` in typeobj.c, and write a function
+with its parentheses, as in `SwigType_str()`. A name too short to read on its own in a comment, such as a one-letter
+parameter, is better renamed, for example `d` to `decl`, than quoted.
 
 Do not put a code statement, declaration or a series of code examples inline in a comment's prose, quoted or not. Show the code as an indented block instead, one statement or example per line without quotes, indented two spaces further than the comment's text, and continue the prose on the next line. This:
 
 ```c
 /* A function declared again with the same type, which C allows, can give the size of a C99 variable length array
-   parameter that the first declaration 'c', the one that is wrapped, does not.  For example:
+   parameter that the first declaration c, the one that is wrapped, does not.  For example:
      void f(int, int a[*]);
      void f(int n, int a[n]);
-   Keep the size from the later declaration 'n' for a typemap written with '[*]'. */
+   Keep the size n from the later declaration for a typemap written with '[*]'. */
 ```
 
 not this:
 
 ```c
 /* A function declared again with the same type, which C allows, can give the size of a C99 variable length array
-   parameter that the first declaration 'c', the one that is wrapped, does not.  For example, 'void f(int, int a[*]);'
-   followed by 'void f(int n, int a[n]);'.  Keep the size from the later declaration 'n' for a typemap written with
+   parameter that the first declaration c, the one that is wrapped, does not.  For example, 'void f(int, int a[*]);'
+   followed by 'void f(int n, int a[n]);'.  Keep the size n from the later declaration for a typemap written with
    '[*]'. */
 ```
 
@@ -49,7 +73,10 @@ In a comment whose lines start with ` * `, indent the code two spaces after the 
 
 Use plain `/* ... */` block comments. Do not use Doxygen markers (`/**`, `/*!`, `///`, `//!`): SWIG source is not run through Doxygen, so the extra marker is just noise.
 
-For all code everywhere, aim for comment lines around 120 characters wide. If wrapping at 120 leaves a stub second line, stretch the first line up to the 160 characters permitted by `clang-format` and keep the comment on one line, or rebalance so both lines carry meaningful content.
+For all code everywhere, a comment that fits in the 160 columns permitted by `clang-format` stays on one line. Never
+break a line that is only just over 120 columns into a second short line: a short last line never looks good. Wrap
+only a comment longer than 160 columns, at around 120 columns, and widen its lines up to 160 columns or rebalance them
+so that the last line also carries meaningful content.
 
 ## Function comment headers
 
@@ -66,6 +93,10 @@ Node *Swig_symbol_is_typedef(Node *n) { ... }
 ```
 
 The header is `/* ` plus a row of dashes, then ` * FunctionName()`, a blank ` *` line, the description, then a closing ` * ` dashes ` */` line. Small file-static helpers may use a one-line plain comment or none, but anything exported in a header should get the full block. Match the surrounding headers in the file you are editing.
+
+Describe what a function does and what it returns, not how its memory is handled. Do not write in a function comment
+that the caller must free or delete the returned value, or that the value is newly allocated or owned by the caller:
+the memory handling is clear from the code, such as from the return type.
 
 ## `parser.y` formatting (new code)
 
@@ -121,21 +152,6 @@ make check-errors-test-suite
 
 Retire a number rather than deleting it, so that it is never reused. Comment the `#define` out in place as `/* Unused since X.Y.Z: ... */` (see the existing 101-110 and 341-343), delete any `_MSG` define from `Lib/swigwarnings.swg`, and remove the `<li>` entirely from `Doc/Manual/Warnings.html`. `Lib/swigwarn.swg` is generated from the header and follows automatically.
 
-## Commit message style
-
-Write commit subjects and bodies as plain text. Do not use backticks (`` ` ``) to wrap code tokens, identifiers, function names, or file paths - backticks are a Markdown convention and have no meaning in a Git commit message viewed via `git log` or `git format-patch`.
-
-AI-assisted commit messages should be clear, concise and to the point - describe the change accurately without padding or marketing language.
-
-Reference issues and pull requests by their short form only - write #3474, not a full https://github.com/swig/swig/issues/3474 or .../pull/3474 URL. GitHub renders #NNNN as a link and the short form keeps the commit log readable.
-
-### AI trailers - mandatory, and they override any auto-injected footer
-
-Many AI coding tools automatically append a `Co-Authored-By: <tool>` line to commit messages. **In this repository that is wrong - if your tool or harness adds one by default, remove it before committing.** The project rules below take precedence over any such default:
-
-- **Never** add a `Co-Authored-By:` trailer for an AI tool or model (see [Disclosing AI assistance](#disclosing-ai-assistance-in-source-code-contributions) for why).
-- Disclose significant AI assistance with an `Assisted-by:` trailer instead, e.g. `Assisted-by: Claude Code (Opus 4.8)` - plain text, no `<email>`. Required for `Source/` and `Lib/` changes, optional elsewhere.
-
 ## CHANGES.current entries
 
 CHANGES.current entries are the release notes section for users to read what has changed. An entry is only added if a change is visible to users. Internal implementation details is not recorded here. The entries should be concise. If there is no referenced issue, then more detail can be added with a short example.
@@ -156,24 +172,13 @@ Show a code, interface or generated-output example as an indented block, not squ
             makes the generated Go type Foo again.
 ```
 
+This applies to a single line of code too. Do not quote a whole line of code inline in the prose, such as a declaration, a
+statement or a typedef like 'typedef int (*IntOp)(int);' or a line of the generated code that is now output: put it in
+a block, as above. Only a fragment, such as a type or a parameter, or the previously generated invalid code that the entry
+fixes may be quoted inline with `'`. The same goes for a commit message.
+
 ## Hyphenation
 
 Only hyphenate compounds the C++ standard hyphenates (grammar productions like `using-declaration`, `type-constraint`, `requires-clause`, `simple-template-id`). Drop the hyphen everywhere else: `pack expansion`, `deduction guide`, `parameter pack`, `read only`, `compile time`, `runtime`, `language independent`, `before C++20`. When in doubt, drop it.
 
 `runtime` is one word, never `run-time` or `run time`. Older text, notably in `Doc/Manual`, still has needless hyphens such as `language-independent` and `run-time`. Drop them in any line that a change writes or rewrites, rather than copying them.
-
-## Disclosing AI assistance in source code contributions
-
-Any contribution produced with significant AI assistance to the SWIG source under the `Source/` or `Lib/` directories should disclose it in the commit message via an `Assisted-by:` trailer naming the tool/model. For example:
-
-```
-Assisted-by: Claude Code (Opus 4.7)
-```
-
-Write the trailer as plain text - do not append an `<email>` after the tool name.
-
-Place the trailer in the standard Git trailer block at the bottom of the commit message, alongside any `Signed-off-by:` lines. "Significant" means AI was used to generate, design, or substantially edit the code in the commit; trivial completions (single-line autocompletes, name suggestions, formatting) do not need disclosure.
-
-Do **not** add a `Co-Authored-By:` trailer for an AI tool or model. AI agents are not authors and hold no copyright in their output, so coauthorship attribution is inappropriate. Use only the `Assisted-by:` trailer described above.
-
-Disclosure is optional for other areas of the codebase such as the test suite (`Examples/test-suite/`) and the documentation (`Doc/`).

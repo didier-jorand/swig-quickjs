@@ -97,7 +97,7 @@ SWIG_PyType_GetFullyQualifiedName(PyTypeObject *type) {
 #endif
 
 /* gh-114329 added PyList_GetItemRef() to Python 3.13.0a4 */
-#if (PY_VERSION_HEX >= 0x030d00a4) && (!defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x030d00a4)
+#if (PY_VERSION_HEX >= 0x030d00a4) && (!defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x030d0000)
 # define SWIG_PyList_GetItemRef PyList_GetItemRef
 #else
 SWIGINTERN PyObject *
@@ -110,7 +110,7 @@ SWIG_PyList_GetItemRef(PyObject *op, Py_ssize_t index) {
 
 /* gh-106004 added PyDict_GetItemRef() and PyDict_GetItemStringRef() to Python 3.13.0a1
    functions are renamed here for compatibility with abi3audit */
-#if (PY_VERSION_HEX >= 0x030d00a1) && (!defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x030d00a1)
+#if (PY_VERSION_HEX >= 0x030d00a1) && (!defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x030d0000)
 # define SWIG_PyDict_GetItemRef PyDict_GetItemRef
 # define SWIG_PyDict_GetItemStringRef PyDict_GetItemStringRef
 #else
@@ -141,5 +141,22 @@ SWIG_PyDict_GetItemStringRef(PyObject *mp, const char *key, PyObject **result) {
   res = SWIG_PyDict_GetItemRef(mp, key_obj, result);
   Py_DECREF(key_obj);
   return res;
+}
+#endif
+
+/* gh-106521 added PyObject_GetOptionalAttr() to Python 3.13.0a1 */
+#if (PY_VERSION_HEX >= 0x030d00a1) && (!defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x030d0000)
+# define SWIG_PyObject_GetOptionalAttr PyObject_GetOptionalAttr
+#else
+SWIGINTERN int
+SWIG_PyObject_GetOptionalAttr(PyObject *obj, PyObject *attr_name, PyObject **result) {
+  *result = PyObject_GetAttr(obj, attr_name);
+  if (*result != NULL)
+    return 1;
+  if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+    PyErr_Clear();
+    return 0;
+  }
+  return -1;
 }
 #endif

@@ -1,6 +1,6 @@
 ---
 name: swig-test
-description: 'Run SWIG test suite for specific languages. Use when testing SWIG changes, verifying language support, debugging test failures, or running regression tests.'
+description: 'Run the SWIG test suite for specific languages or one test case across every configured language. Use when testing SWIG changes, adding or changing a test case, verifying language support, debugging test failures or running regression tests.'
 argument-hint: 'Specify language (e.g., python, java) and optionally a single test name'
 ---
 
@@ -160,6 +160,18 @@ When you finish, report:
 
 This makes it explicit what was actually verified and what the test now does
 differently per language.
+
+## Where to add a test
+- Add a regression test to an existing testcase in `Examples/test-suite/*.i` that covers the same feature, before
+  thinking of a new one. Every target language wraps a shared `.i` file, so a case missing from it is tested in no
+  target language, even when the bug was found in one. Look for a testcase by name and by grepping for the construct.
+- Create a new shared testcase only if no existing one fits, and add it to the matching `*_TEST_CASES` list in
+  `Examples/test-suite/common.mk`.
+- Check what a target language does at run time in its runme, `Examples/test-suite/<lang>/<testcase>_runme.<ext>`.
+- Create a testcase for one target language, listed in `Examples/test-suite/<lang>/Makefile.in`, only to test what is
+  specific to that target language, such as its own typemaps, features or command line options, as in Python's
+  `python_pybuffer` testcase for its `pybuffer.i` typemaps and `python_nondynamic` for its `%pythonnondynamic`
+  feature.
 
 ## Writing test interfaces
 - Do not collapse a class or struct definition onto a single line in a `.i` test case. Put the body members on their own lines, as you would in real source:
